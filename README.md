@@ -63,15 +63,12 @@ Useful environment variables (all optional — see `.env.example`):
 Full deployment guide in **[DEPLOY.md](DEPLOY.md)** — covers:
 
 - **Docker + Caddy** (auto-HTTPS) on any VPS or Oracle Cloud Free Tier
-- **pm2 + nginx** as a no-Docker alternative
-- **Koyeb** (free, push from GitHub)
+- **pm2 + Caddy** as a no-Docker alternative
 - Backups, log monitoring, rollback
 
-TL;DR for Koyeb:
+**Free hosting (no VPS):** use **[RENDER.md](RENDER.md)** — Render Web Service from this repo’s `Dockerfile` (free tier sleeps when idle; optional ping keeps it warm).
 
-1. Push this repo to GitHub.
-2. Create a new service on [koyeb.com](https://koyeb.com), point it at your repo.
-3. Builder: `Dockerfile`, instance: `nano`. Done.
+Optional **[render.yaml](render.yaml)** — Render Blueprint for one-click infra-as-code.
 
 ## Project layout
 
@@ -98,7 +95,9 @@ TL;DR for Koyeb:
 ├── docker-compose.yml      # app + Caddy reverse proxy
 ├── Caddyfile               # auto-HTTPS reverse proxy config
 ├── ecosystem.config.js     # pm2 process config (no-Docker option)
-├── DEPLOY.md               # full deployment guide
+├── DEPLOY.md               # full deployment guide (VPS + Docker)
+├── RENDER.md               # free Render.com Web Service walkthrough
+├── render.yaml             # optional Render Blueprint
 ├── .env.example            # documented config knobs
 └── package.json
 ```

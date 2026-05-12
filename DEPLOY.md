@@ -3,12 +3,13 @@
 This guide gets DRAFTIX live with automatic HTTPS in ~10 minutes on a fresh
 Linux VPS (DigitalOcean, Hetzner, Linode, AWS Lightsail, etc).
 
-Two paths are documented. **Pick one:**
+Three paths are documented. **Pick one:**
 
 | Path | Best for | What it needs |
 | --- | --- | --- |
 | **A. Docker (recommended)** | One-command deploys, easy rollback | `docker` + `docker compose` |
 | **B. pm2 + Caddy** | Smaller VPSs, no Docker | `node`, `pm2`, `caddy` (system packages) |
+| **C. Render (free)** | No VPS, no card; good for friends testing | GitHub + [RENDER.md](./RENDER.md) (sleeps after idle; optional keep-warm ping) |
 
 ---
 

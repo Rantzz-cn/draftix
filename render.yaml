@@ -1,0 +1,26 @@
+# Render Blueprint — optional "Infrastructure as Code" deploy.
+# https://render.com/docs/blueprint-spec
+#
+# Usage: Render Dashboard → New → Blueprint → paste this repo URL,
+#        OR connect repo and Render may auto-detect render.yaml.
+#
+# After first deploy, add ALLOWED_ORIGINS in the dashboard with your
+# https://<name>.onrender.com URL (and draftix.tech if you use a custom domain).
+
+services:
+  - type: web
+    name: draftix
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      - key: APP_VERSION
+        value: "1.1.0"

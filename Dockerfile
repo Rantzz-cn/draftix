@@ -27,10 +27,10 @@ RUN mkdir -p /app/data && \
 
 USER draftix
 
-# Healthcheck hits the JSON endpoint so Docker / orchestrators can restart
-# the container if it goes unresponsive.
-HEALTHCHECK --interval=30s --timeout=4s --start-period=10s --retries=3 \
-  CMD wget -q --spider --tries=1 http://127.0.0.1:3000/healthz || exit 1
+# Healthcheck — use PORT from the environment (Render, Fly, etc. inject a
+# random port; hardcoding 3000 would make the check fail there).
+HEALTHCHECK --interval=30s --timeout=4s --start-period=15s --retries=3 \
+  CMD node -e "require('http').get('http://127.0.0.1:'+(process.env.PORT||3000)+'/healthz',(r)=>{r.resume();process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))"
 
 EXPOSE 3000
 CMD ["node", "server.js"]
