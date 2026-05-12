@@ -632,11 +632,22 @@ a.ghost:hover { color: var(--text); border-color: var(--accent); background: var
 
 .gate-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  /* Same second-column width on every row so inputs and button edges line up */
+  grid-template-columns: minmax(0, 1fr) minmax(11.25rem, 13rem);
   gap: 1rem;
   align-items: end;
 }
-.gate-actions { padding-bottom: 1.05rem; }
+.gate-actions {
+  padding-bottom: 1.05rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-width: 0;
+}
+.gate-actions button {
+  width: 100%;
+  white-space: nowrap;
+}
 
 .divider {
   display: flex;
