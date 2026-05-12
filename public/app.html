@@ -176,28 +176,16 @@
             </div>
           </section>
 
-          <section id="gameSettingsEditor" class="team-name-editor game-settings-editor" hidden>
-            <div class="team-name-head">Game settings <span class="hint-inline">(host only - locks at start)</span></div>
-            <div class="game-settings-grid">
-              <div>
-                <label for="agentBanCount">Agent bans</label>
-                <select id="agentBanCount">
-                  <option value="0">0 total</option>
-                  <option value="2">2 total</option>
-                  <option value="4">4 total</option>
-                  <option value="6" selected>6 total</option>
-                  <option value="8">8 total</option>
-                  <option value="10">10 total</option>
-                  <option value="12">12 total</option>
-                </select>
-              </div>
-              <p class="setting-note" id="agentBanCountNote">Six total bans means three per side.</p>
-              <button type="button" id="btnSaveGameSettings" class="secondary">Save settings</button>
-            </div>
-          </section>
-
           <div id="hostStart" class="host-start" hidden>
+            <div class="host-start-actions">
             <button type="button" id="btnStart" class="primary big">▶ Start draft</button>
+            <button type="button" id="btnOpenGameSettings" class="settings-icon-btn" aria-label="Open game settings" title="Game settings">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" />
+                <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.04.04a2.1 2.1 0 0 1-2.97 2.97l-.04-.04a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.65V21.4a2.1 2.1 0 0 1-4.2 0v-.06a1.8 1.8 0 0 0-1.1-1.65 1.8 1.8 0 0 0-1.98.36l-.04.04a2.1 2.1 0 0 1-2.97-2.97l.04-.04A1.8 1.8 0 0 0 3.8 15a1.8 1.8 0 0 0-1.65-1.1H2.1a2.1 2.1 0 0 1 0-4.2h.06A1.8 1.8 0 0 0 3.8 8a1.8 1.8 0 0 0-.36-1.98l-.04-.04A2.1 2.1 0 0 1 6.37 3l.04.04A1.8 1.8 0 0 0 8.4 3.4a1.8 1.8 0 0 0 1.1-1.65V1.7a2.1 2.1 0 0 1 4.2 0v.06a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 1.98-.36l.04-.04a2.1 2.1 0 0 1 2.97 2.97l-.04.04A1.8 1.8 0 0 0 19.4 8a1.8 1.8 0 0 0 1.65 1.1h.06a2.1 2.1 0 0 1 0 4.2h-.06A1.8 1.8 0 0 0 19.4 15Z" />
+              </svg>
+            </button>
+            </div>
             <p class="hint">Both captains must be claimed before the draft starts.</p>
           </div>
 
@@ -330,6 +318,43 @@
         Not endorsed by Riot Games. VALORANT and Riot Games are trademarks of Riot Games, Inc.
       </p>
     </footer>
+
+    <!-- Game Settings modal -->
+    <div id="gameSettingsModal" class="modal settings-modal" hidden aria-hidden="true" role="dialog" aria-labelledby="gameSettingsTitle">
+      <div class="modal-overlay" data-settings-modal-dismiss></div>
+      <div class="modal-card settings-modal-card" role="document">
+        <button type="button" class="modal-close" id="settingsModalClose" aria-label="Close">×</button>
+
+        <div class="modal-header">
+          <span class="modal-eyebrow">Host controls</span>
+          <h2 id="gameSettingsTitle" class="modal-title">Game Settings</h2>
+          <p class="modal-subtitle">Tune the draft rules before captains start. Settings lock when the draft begins.</p>
+        </div>
+
+        <div class="settings-panel">
+          <div class="settings-row">
+            <div>
+              <label for="agentBanCount">Agent bans</label>
+              <p id="agentBanCountNote" class="setting-note">Six total bans means three per side.</p>
+            </div>
+            <select id="agentBanCount">
+              <option value="0">0 total</option>
+              <option value="2">2 total</option>
+              <option value="4">4 total</option>
+              <option value="6" selected>6 total</option>
+              <option value="8">8 total</option>
+              <option value="10">10 total</option>
+              <option value="12">12 total</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-actions settings-modal-actions">
+          <button type="button" id="btnSaveGameSettings" class="primary">Save settings</button>
+          <button type="button" id="btnCancelGameSettings" class="secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
 
     <!-- ─── Draft Complete modal ─── -->
     <div id="completeModal" class="modal" hidden aria-hidden="true" role="dialog" aria-labelledby="completeModalTitle">

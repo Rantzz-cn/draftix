@@ -273,6 +273,7 @@
     const mapsSection = $("mapsSection");
     const agentsSection = $("agentsSection");
     const completeModal = $("completeModal");
+    const gameSettingsModal = $("gameSettingsModal");
 
     let state = null;
     let myCode = null;
@@ -593,16 +594,17 @@
       const hostStart = $("hostStart");
       const lobbyHint = $("lobbyHint");
       const editor = $("teamNameEditor");
-      const settingsEditor = $("gameSettingsEditor");
 
       actA.hidden = !lobby;
       actB.hidden = !lobby;
       hostStart.hidden = !(lobby && state.me && state.me.isHost);
       lobbyHint.hidden = !lobby;
       if (editor) editor.hidden = !(lobby && state.me && state.me.isHost);
-      if (settingsEditor) settingsEditor.hidden = !(lobby && state.me && state.me.isHost);
 
-      if (!lobby) return;
+      if (!lobby) {
+        closeGameSettingsModal();
+        return;
+      }
 
       const me = state.me || {};
       const capA = !!state.captainNames.A;
@@ -637,17 +639,7 @@
         }
       }
 
-      // Host-only game settings editor
-      if (settingsEditor) {
-        const showSettings = lobby && me.isHost;
-        if (showSettings) {
-          const select = $("agentBanCount");
-          const note = $("agentBanCountNote");
-          const total = agentBanCount(state);
-          if (select && document.activeElement !== select) select.value = String(total);
-          if (note) note.textContent = agentBanCountNote(total);
-        }
-      }
+      syncGameSettingsControls();
     }
 
     function renderRosters() {
@@ -909,6 +901,39 @@
     }
 
     // ─── Coin-flip overlay ────────────────────────────────
+    function syncGameSettingsControls() {
+      const select = $("agentBanCount");
+      const note = $("agentBanCountNote");
+      const total = agentBanCount(state);
+      if (select && document.activeElement !== select) select.value = String(total);
+      if (note) note.textContent = agentBanCountNote(total);
+    }
+
+    function openGameSettingsModal() {
+      if (!gameSettingsModal || !state || !state.me || !state.me.isHost || state.phase !== "lobby") return;
+      syncGameSettingsControls();
+      gameSettingsModal.hidden = false;
+      gameSettingsModal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
+      const card = gameSettingsModal.querySelector(".modal-card");
+      if (card) {
+        card.style.animation = "none";
+        void card.offsetWidth;
+        card.style.animation = "";
+      }
+      setTimeout(function () {
+        const select = $("agentBanCount");
+        if (select) try { select.focus({ preventScroll: true }); } catch (_) {}
+      }, 50);
+    }
+
+    function closeGameSettingsModal() {
+      if (!gameSettingsModal || gameSettingsModal.hidden) return;
+      gameSettingsModal.hidden = true;
+      gameSettingsModal.setAttribute("aria-hidden", "true");
+      if (!completeModal || completeModal.hidden) document.body.classList.remove("modal-open");
+    }
+
     function playCoinFlip(s) {
       const el = document.getElementById("coinFlip");
       const coin = document.getElementById("coinEl");
@@ -1045,7 +1070,6 @@
 
     function ackRoom(res) {
       if (res && !res.ok && res.error) {
-        showError(roomError, res.error);
         toast.error(res.error);
       } else {
         showError(roomError, "");
@@ -1367,9 +1391,9 @@
           if (res && res.ok) {
             btnSaveTeamNames.textContent = "Saved ✓";
             setTimeout(() => { btnSaveTeamNames.textContent = "Save names"; }, 1500);
+            showError(roomError, "");
             toast.success("Team names saved");
           } else if (res && res.error) {
-            showError($("roomError"), res.error);
             toast.error(res.error);
           }
         });
@@ -1377,6 +1401,16 @@
     }
 
     // Game settings
+    const btnOpenGameSettings = $("btnOpenGameSettings");
+    if (btnOpenGameSettings) btnOpenGameSettings.addEventListener("click", openGameSettingsModal);
+    const settingsModalClose = $("settingsModalClose");
+    if (settingsModalClose) settingsModalClose.addEventListener("click", closeGameSettingsModal);
+    const btnCancelGameSettings = $("btnCancelGameSettings");
+    if (btnCancelGameSettings) btnCancelGameSettings.addEventListener("click", closeGameSettingsModal);
+    if (gameSettingsModal) {
+      const overlay = gameSettingsModal.querySelector("[data-settings-modal-dismiss]");
+      if (overlay) overlay.addEventListener("click", closeGameSettingsModal);
+    }
     const agentBanSelect = $("agentBanCount");
     const agentBanNote = $("agentBanCountNote");
     if (agentBanSelect && agentBanNote) {
@@ -1393,9 +1427,10 @@
           if (res && res.ok) {
             btnSaveGameSettings.textContent = "Saved";
             setTimeout(() => { btnSaveGameSettings.textContent = "Save settings"; }, 1500);
+            showError(roomError, "");
             toast.success("Game settings saved");
+            closeGameSettingsModal();
           } else if (res && res.error) {
-            showError($("roomError"), res.error);
             toast.error(res.error);
           }
         });
@@ -1460,6 +1495,7 @@
 
       document.addEventListener("keydown", function (e) {
         if (e.key === "Escape" && !completeModal.hidden) closeCompleteModal();
+        if (e.key === "Escape" && gameSettingsModal && !gameSettingsModal.hidden) closeGameSettingsModal();
       });
 
       $("modalCopyBtn").addEventListener("click", async function () {
