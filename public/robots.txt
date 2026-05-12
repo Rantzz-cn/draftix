@@ -7,7 +7,6 @@ Disallow: /app
 Disallow: /app.html
 Disallow: /img
 Disallow: /healthz
-Disallow: /status.html
 Disallow: /internal/
 Disallow: /api/admin
 
