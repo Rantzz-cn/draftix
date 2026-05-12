@@ -58,18 +58,70 @@ Open **two browser tabs**, create a session in one, join in the other — bans s
 
 ---
 
-## 3. Custom domain (`draftix.tech`)
+## 3. Custom domain (`draftix.tech` on Render)
 
-1. Render dashboard → your service → **Settings** → **Custom Domains** → **Add** → `draftix.tech` and `www.draftix.tech`.
-2. Render shows **DNS records** (usually **CNAME** to `xxx.onrender.com`). Add those at your registrar.
-3. Wait for TLS to turn **Verified** (often a few minutes).
-4. Update **`ALLOWED_ORIGINS`** in Render to include **all** of:
+Your app is already branded for `draftix.tech` in HTML meta tags and `sitemap.xml`. Pointing DNS at Render only wires the name to your existing Web Service.
 
-   `https://draftix.onrender.com` (keep this if you still share the old link),  
-   `https://draftix.tech`,  
-   `https://www.draftix.tech`
+### 3a. Add the domain in Render
 
-5. **Manual Deploy** → **Clear build cache & deploy** (optional) so env is picked up cleanly.
+1. [Render Dashboard](https://dashboard.render.com/) → select your **draftix** Web Service.
+2. **Settings** → scroll to **Custom Domains** → **+ Add Custom Domain**.
+3. Enter **`draftix.tech`** (apex / root) and save.  
+   Render will usually **auto-add `www.draftix.tech`** and redirect it to the apex (or the reverse if you add `www` first — either is fine).
+4. Render shows a **DNS verification** panel with the exact records to create. **Copy those values** — they are unique to your service (they look like a **CNAME** target such as `draftix-xxxx.onrender.com` or similar).
+
+> **Remove any `AAAA` (IPv6) records** for `draftix.tech` / `www` while setting this up. Render serves IPv4 only; stray `AAAA` records can break routing or TLS.  
+> Render’s full guide: [Custom domains](https://render.com/docs/custom-domains) · provider help: [Cloudflare](https://render.com/docs/configure-cloudflare-dns) · [Namecheap](https://render.com/docs/configure-namecheap-dns) · [other DNS](https://render.com/docs/configure-other-dns)
+
+### 3b. Create DNS records at your `.tech` registrar
+
+Log in where you bought **`draftix.tech`** (Porkbun, Namecheap, Cloudflare, Google Domains successor, etc.) → **DNS** / **Manage DNS**.
+
+Typical setup (confirm against what **Render shows you** — use Render’s values if they differ):
+
+| Type | **Name / Host** | **Value / Target** |
+| --- | --- | --- |
+| **CNAME** | `@` or `draftix.tech` or leave blank *(depends on provider)* | The hostname Render gives you (often `draftix.onrender.com` or a service-specific `*.onrender.com`) |
+
+Some registrars **do not allow a CNAME on the bare apex** (`@`). In that case Render’s dashboard will show **A records** instead — add exactly those **IPv4 addresses**.
+
+For **`www`**: if Render did not auto-create it, add:
+
+| Type | Name | Value |
+| --- | --- | --- |
+| **CNAME** | `www` | Same target Render shows for the apex (often your `*.onrender.com` hostname) |
+
+TTL: **300** (5 min) or default is fine while testing.
+
+### 3c. Verify in Render
+
+1. Wait **2–15 minutes** for DNS to propagate.
+2. Back in **Custom Domains**, click **Verify** next to each domain until status is **Verified** (TLS cert issued).
+3. Open **`https://draftix.tech`** and **`https://www.draftix.tech`** in the browser — both should load the site (one may redirect to the other).
+
+### 3d. Fix `ALLOWED_ORIGINS` (required for WebSockets)
+
+In **Environment**, set **`ALLOWED_ORIGINS`** to **one line, comma-separated, no spaces**, including every origin players might use:
+
+```text
+https://draftix.onrender.com,https://draftix.tech,https://www.draftix.tech
+```
+
+(If your Render service name is not `draftix`, replace `https://draftix.onrender.com` with your real URL, e.g. `https://myname.onrender.com`.)
+
+Then **Manual Deploy** → **Deploy latest commit** (or **Save** if Render auto-restarts) so the new env applies.
+
+### 3e. Optional: hide the old `onrender.com` URL
+
+After you’re happy with `draftix.tech`, you can **disable the Render subdomain** so only your custom domain works: **Settings** → **Custom Domains** → toggle **Render subdomain** off. Then update bookmarks and `ALLOWED_ORIGINS` to drop the `.onrender.com` origin if you no longer need it.
+
+### 3f. Point your keep-warm ping at the custom domain
+
+If you use [cron-job.org](https://cron-job.org) (see §4), after DNS is live add or switch a job to:
+
+`https://draftix.tech/healthz`
+
+so wakes hit your real domain too.
 
 ---
 
@@ -78,7 +130,7 @@ Open **two browser tabs**, create a session in one, join in the other — bans s
 Use a free cron ping every **10 minutes** so the free instance rarely idles long enough to sleep:
 
 1. [cron-job.org](https://cron-job.org) (or UptimeRobot, Better Stack free tier, etc.)
-2. Create a job: **GET** `https://<your-service-name>.onrender.com/healthz`
+2. Create a job: **GET** `https://draftix.tech/healthz` (or `https://<your-service>.onrender.com/healthz` until DNS is ready)
 3. Interval: **10 minutes**
 
 This is allowed on Render’s free tier for personal projects; don’t hammer sub-second intervals.
