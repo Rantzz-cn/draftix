@@ -599,11 +599,21 @@ async function main() {
   const FEEDBACK_KINDS = new Set(["feedback", "bug", "other"]);
   const FEEDBACK_MSG_MAX = 4000;
 
+  function isAllowedDiscordWebhookHost(hostname) {
+    const h = String(hostname || "").toLowerCase();
+    return (
+      h === "discord.com" ||
+      h === "discordapp.com" ||
+      h.endsWith(".discord.com") ||
+      h.endsWith(".discordapp.com")
+    );
+  }
+
   function postDiscordWebhook(webhookUrl, payload) {
     return new Promise((resolve) => {
       try {
         const u = new URL(webhookUrl);
-        if (u.protocol !== "https:" || !/\.discord(?:app)?\.com$/i.test(u.hostname)) {
+        if (u.protocol !== "https:" || !isAllowedDiscordWebhookHost(u.hostname)) {
           return resolve(false);
         }
         const body = JSON.stringify(payload);
@@ -671,7 +681,9 @@ async function main() {
       let chunk = message.slice(0, 1900);
       if (message.length > 1900) chunk += "…";
       const content = (head + chunk).slice(0, 1950);
-      postDiscordWebhook(hook, { username: "DRAFTIX feedback", content }).catch(() => {});
+      postDiscordWebhook(hook, { username: "DRAFTIX feedback", content }).then((ok) => {
+        if (!ok) console.warn("Feedback: Discord webhook delivery failed (check URL or Render logs).");
+      });
     }
 
     res.json({ ok: true });
@@ -853,7 +865,6 @@ async function main() {
           "<!DOCTYPE html><meta charset=utf-8><title>Metrics</title><p>Missing or invalid <code>token</code>.</p>"
         );
     }
-    const enc = JSON.stringify(secret);
     res.type("html").send(`<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>DRAFTIX metrics</title>
@@ -865,14 +876,8 @@ code{color:#c8d4e8}
 </style>
 <p>Private dashboard — keep this URL secret (it includes your token). Auto-refresh every 12s. For long-term analytics, add <a href="https://plausible.io" rel="noopener noreferrer">Plausible</a> or <a href="https://render.com/docs/web-service-metrics" rel="noopener noreferrer">Render metrics</a>.</p>
 <pre id="o">Loading…</pre>
-<script>
-const T=${enc};
-async function L(){
-  const r=await fetch("/api/admin/stats?token="+encodeURIComponent(T),{cache:"no-store"});
-  document.getElementById("o").textContent=await r.text();
-}
-L();setInterval(L,12000);
-</script></html>`);
+<script src="/admin-metrics.js" defer></script>
+</html>`);
   });
 
   // ─── Per-IP socket-event rate limiter ───
