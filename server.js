@@ -867,17 +867,24 @@ async function main() {
     }
     res.type("html").send(`<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>DRAFTIX metrics</title>
-<style>
-body{font:14px system-ui,system-ui,sans-serif;background:#0b0f17;color:#e7eefb;margin:1rem;line-height:1.45}
-pre{background:#121826;padding:1rem;border-radius:8px;overflow:auto;border:1px solid #223047;white-space:pre-wrap;word-break:break-word}
-p{color:#8899b7;font-size:13px;max-width:52rem}
-code{color:#c8d4e8}
-</style>
-<p>Private dashboard — keep this URL secret (it includes your token). Auto-refresh every 12s. For long-term analytics, add <a href="https://plausible.io" rel="noopener noreferrer">Plausible</a> or <a href="https://render.com/docs/web-service-metrics" rel="noopener noreferrer">Render metrics</a>.</p>
-<pre id="o">Loading…</pre>
+<meta name="robots" content="noindex,nofollow"/>
+<title>DRAFTIX — Admin metrics</title>
+<link rel="stylesheet" href="/admin-dashboard.css"/>
+</head>
+<body class="admin-dash-page">
+<header class="admin-header">
+  <h1>DRAFT<span>IX</span> admin</h1>
+  <p>Private metrics for this server instance only. Keep this URL secret (it contains your access token). Charts for long-term trends belong in <a href="https://render.com/docs/web-service-metrics" rel="noopener noreferrer">Render</a> or <a href="https://plausible.io" rel="noopener noreferrer">Plausible</a>.</p>
+</header>
+<main class="admin-main" id="dash-root">
+  <div id="dash-banner" class="dash-banner" hidden></div>
+  <div id="dash-meta" class="dash-meta"></div>
+  <p class="dash-loading" id="dash-loading">Loading metrics…</p>
+  <div id="dash-grid" class="dash-grid" hidden></div>
+  <footer class="dash-foot">DRAFTIX internal · not linked from the public site · <code>/internal/metrics</code></footer>
+</main>
 <script src="/admin-metrics.js" defer></script>
-</html>`);
+</body></html>`);
   });
 
   // ─── Per-IP socket-event rate limiter ───
