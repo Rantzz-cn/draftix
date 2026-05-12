@@ -618,9 +618,11 @@ a.ghost:hover { color: var(--text); border-color: var(--accent); background: var
   background: linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 1.75rem 2rem 1.5rem;
+  padding: 1.75rem 2rem;
   position: relative;
   overflow: hidden;
+  /* Shared height for inputs + buttons in each row */
+  --gate-control-h: 3.125rem;
 }
 .gate-card::before {
   content: '';
@@ -634,18 +636,39 @@ a.ghost:hover { color: var(--text); border-color: var(--accent); background: var
   display: grid;
   /* Same second-column width on every row so inputs and button edges line up */
   grid-template-columns: minmax(0, 1fr) minmax(11.25rem, 13rem);
-  gap: 1rem;
+  gap: 1rem 1.1rem;
   align-items: end;
 }
-.gate-actions {
-  padding-bottom: 1.05rem;
+/* Left column: label + field stack; bottom-align field with button */
+.gate-grid > div:first-child {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   min-width: 0;
 }
+.gate-card label {
+  margin-bottom: 0.4rem;
+}
+.gate-card input[type="text"] {
+  min-height: var(--gate-control-h);
+  box-sizing: border-box;
+  line-height: 1.2;
+}
+.gate-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-width: 0;
+  padding-bottom: 0;
+}
 .gate-actions button {
   width: 100%;
+  min-height: var(--gate-control-h);
+  box-sizing: border-box;
+  padding: 0 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   white-space: nowrap;
 }
 
