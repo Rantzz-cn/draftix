@@ -255,7 +255,7 @@
     function clearUrlJoinRejected(code) { rejectedUrlCodes.delete(code); saveRejected(rejectedUrlCodes); }
 
     const notFoundMsg =
-      "That code is not active on this server. Ask the host to share their Copy link, and make sure the server is running.";
+      "That session code is not active. Ask the host for a fresh invite link.";
 
     const socket = serverBase
       ? io(serverBase, { transports: ["websocket", "polling"] })
@@ -1086,10 +1086,10 @@
       setConnState("reconnecting");
       showError(
         gateError,
-        "Cannot reach the DRAFTIX server. Run npm start in the project folder and refresh. The page scans ports 3000–3012 for this app."
+        "Can't connect right now. We'll keep trying — you can also refresh the page."
       );
       if (!_reconnectingToastShown) {
-        toast.error("Can't reach the DRAFTIX server. Retrying…", { duration: 8000 });
+        toast.error("Can't reach the server. Retrying…", { duration: 8000 });
         _reconnectingToastShown = true;
       }
     });
@@ -1262,7 +1262,7 @@
     $("btnCreate").addEventListener("click", function () {
       showError(gateError, "");
       if (!socket.connected) {
-        showError(gateError, "Not connected yet. Make sure npm start is running and refresh.");
+        showError(gateError, "Not connected yet. Wait a moment or refresh the page.");
         return;
       }
       const nickname = $("nickname").value.trim() || "Host";
@@ -1294,7 +1294,7 @@
       let answered = false;
       const timer = setTimeout(function () {
         if (answered) return; answered = true;
-        showError(gateError, "No reply from the server. Check that it's running and try again.");
+        showError(gateError, "No reply from the server. Try again in a moment.");
       }, 15000);
       socket.emit("joinSession", { code, nickname, token: storedToken || undefined }, function (res) {
         if (answered) return; answered = true; clearTimeout(timer);
@@ -1790,7 +1790,7 @@
     console.error(e);
     if (gateError) {
       gateError.hidden = false;
-      gateError.textContent = "Could not find the DRAFTIX server. Run npm start, then refresh.";
+      gateError.textContent = "Couldn't connect to the service. Try again in a moment.";
     }
   });
 })();
