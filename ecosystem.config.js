@@ -28,7 +28,7 @@ module.exports = {
         PORT: "3000",
         TRUST_PROXY: "1",
         ALLOWED_ORIGINS: "https://draftix.tech,https://www.draftix.tech",
-        APP_VERSION: "1.0.0",
+        APP_VERSION: "1.1.1",
       },
       env_production: {
         NODE_ENV: "production",

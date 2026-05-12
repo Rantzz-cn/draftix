@@ -8,12 +8,20 @@ Disallow: /app.html
 Disallow: /img
 Disallow: /healthz
 Disallow: /status.html
+Disallow: /internal/
+Disallow: /api/admin
 
 # Allow major social/preview crawlers to fetch the landing for link cards.
 User-agent: Twitterbot
 Allow: /
 
 User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Facebot
+Allow: /
+
+User-agent: facebookcatalog
 Allow: /
 
 Sitemap: https://draftix.tech/sitemap.xml

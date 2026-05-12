@@ -38,7 +38,7 @@ const CHAT_MAX_LEN = 240;
 const CHAT_HISTORY = 50;
 let chatMsgSeq = 0;
 const SERVER_STARTED_AT = Date.now();
-const APP_VERSION = process.env.APP_VERSION || "1.1.0";
+const APP_VERSION = process.env.APP_VERSION || "1.1.1";
 
 function clean(s, max) {
   if (s == null) return "";
@@ -108,6 +108,7 @@ function randomCode() {
 // can never accidentally join a different session.
 const DATA_DIR = path.join(__dirname, "data");
 const CODE_LOG_PATH = path.join(DATA_DIR, "codes.log");
+const FEEDBACK_LOG_PATH = path.join(DATA_DIR, "feedback.log");
 const usedCodes = new Set();
 
 async function loadUsedCodes() {
@@ -479,6 +480,16 @@ async function main() {
   const app = express();
   app.disable("x-powered-by"); // don't leak framework/version
 
+  const traffic = {
+    since: Date.now(),
+    landingViews: 0,
+    appShellViews: 0,
+    feedbackTotal: 0,
+    peakSockets: 0,
+  };
+
+  app.use(express.json({ limit: "24kb" }));
+
   // ─── Trust proxy ────────────────────────────────────
   // Behind nginx/Caddy/Cloudflare we MUST trust the X-Forwarded-* headers so
   // express-rate-limit and the socket IP map see the real client IP. Set
@@ -545,6 +556,15 @@ async function main() {
     next();
   });
 
+  app.use((req, res, next) => {
+    if (req.method === "GET") {
+      const p = req.path || "";
+      if (p === "/" || p === "/index.html") traffic.landingViews++;
+      else if (p === "/app") traffic.appShellViews++;
+    }
+    next();
+  });
+
   // ─── HTTP rate limit (lenient — protects static + healthz) ───
   const httpLimiter = rateLimit({
     windowMs: 60_000,
@@ -566,6 +586,95 @@ async function main() {
       turnTimeoutMs: TURN_TIMEOUT_MS,
       catalog: { maps: catalog.maps.length, agents: catalog.agents.length },
     });
+  });
+
+  const feedbackLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 12,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: "Too many submissions — try again later.",
+  });
+
+  const FEEDBACK_KINDS = new Set(["feedback", "bug", "other"]);
+  const FEEDBACK_MSG_MAX = 4000;
+
+  function postDiscordWebhook(webhookUrl, payload) {
+    return new Promise((resolve) => {
+      try {
+        const u = new URL(webhookUrl);
+        if (u.protocol !== "https:" || !/\.discord(?:app)?\.com$/i.test(u.hostname)) {
+          return resolve(false);
+        }
+        const body = JSON.stringify(payload);
+        const reqOut = https.request(
+          {
+            hostname: u.hostname,
+            path: u.pathname + u.search,
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Content-Length": Buffer.byteLength(body),
+            },
+            timeout: 8000,
+          },
+          (up) => {
+            up.resume();
+            resolve(up.statusCode >= 200 && up.statusCode < 300);
+          }
+        );
+        reqOut.on("error", () => resolve(false));
+        reqOut.on("timeout", () => {
+          reqOut.destroy();
+          resolve(false);
+        });
+        reqOut.write(body);
+        reqOut.end();
+      } catch (_) {
+        resolve(false);
+      }
+    });
+  }
+
+  app.post("/api/feedback", feedbackLimiter, async (req, res) => {
+    if (req.body && String(req.body.website || "").trim()) {
+      return res.status(400).json({ ok: false, error: "Invalid request" });
+    }
+    const kindRaw = clean(req.body && req.body.kind, 16).toLowerCase() || "feedback";
+    const kind = FEEDBACK_KINDS.has(kindRaw) ? kindRaw : "feedback";
+    const message = clean(req.body && req.body.message, FEEDBACK_MSG_MAX);
+    if (!message || message.length < 4) {
+      return res.status(400).json({ ok: false, error: "Please write a bit more detail (4+ characters)." });
+    }
+    const contact = clean(req.body && req.body.contact, 120);
+    const page = clean(req.body && req.body.page, 240);
+    const row = {
+      ts: Date.now(),
+      kind,
+      message,
+      contact: contact || undefined,
+      page: page || undefined,
+      ip: req.ip || "",
+    };
+    traffic.feedbackTotal++;
+    try {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+      await fsp.appendFile(FEEDBACK_LOG_PATH, JSON.stringify(row) + "\n");
+    } catch (e) {
+      console.warn("Feedback log write failed:", e.message);
+      return res.status(500).json({ ok: false, error: "Could not save feedback — try again later." });
+    }
+
+    const hook = process.env.FEEDBACK_DISCORD_WEBHOOK_URL;
+    if (hook && /^https:\/\//.test(hook)) {
+      const head = `[${kind}] ${page ? `(${page}) ` : ""}${contact ? contact + " — " : ""}`;
+      let chunk = message.slice(0, 1900);
+      if (message.length > 1900) chunk += "…";
+      const content = (head + chunk).slice(0, 1950);
+      postDiscordWebhook(hook, { username: "DRAFTIX feedback", content }).catch(() => {});
+    }
+
+    res.json({ ok: true });
   });
 
   // ─── Image proxy for canvas exports ─────────────────
@@ -679,10 +788,92 @@ async function main() {
     },
   }));
 
+  app.use((err, req, res, next) => {
+    const isParse =
+      err instanceof SyntaxError &&
+      err.status === 400 &&
+      "body" in err;
+    const isEntityParse = err && err.type === "entity.parse.failed";
+    if (isParse || isEntityParse) {
+      return res.status(400).json({ ok: false, error: "Invalid JSON body" });
+    }
+    next(err);
+  });
+
   const server = http.createServer(app);
   const io = new Server(server, { cors: { origin: corsOrigin } });
 
   const sessions = sessionsStore();
+
+  function adminAccess(req) {
+    const secret = process.env.ADMIN_STATS_TOKEN;
+    if (!secret || String(secret).length < 24) return "off";
+    const q = String(req.query.token || "");
+    const auth = String(req.headers.authorization || "");
+    const bearer =
+      auth.length > 7 && auth.slice(0, 7).toLowerCase() === "bearer " ? auth.slice(7).trim() : "";
+    if (q === secret || bearer === secret) return "ok";
+    return "deny";
+  }
+
+  app.get("/api/admin/stats", (req, res) => {
+    const a = adminAccess(req);
+    if (a === "off") return res.status(404).end("Not found");
+    if (a === "deny") return res.status(401).json({ error: "Unauthorized" });
+    let sockets = 0;
+    try {
+      sockets = io.engine.clientsCount;
+    } catch (_) {}
+    res.json({
+      ok: true,
+      at: Date.now(),
+      uptimeSec: Math.floor((Date.now() - SERVER_STARTED_AT) / 1000),
+      version: APP_VERSION,
+      draftSessions: sessions.size,
+      catalog: { maps: catalog.maps.length, agents: catalog.agents.length },
+      socketsConnected: sockets,
+      traffic: {
+        since: traffic.since,
+        landingViews: traffic.landingViews,
+        appShellViews: traffic.appShellViews,
+        feedbackTotal: traffic.feedbackTotal,
+        peakSockets: traffic.peakSockets,
+      },
+    });
+  });
+
+  app.get("/internal/metrics", (req, res) => {
+    const secret = process.env.ADMIN_STATS_TOKEN;
+    if (!secret || String(secret).length < 24) return res.status(404).end("Not found");
+    if (String(req.query.token || "") !== secret) {
+      return res
+        .status(401)
+        .type("html")
+        .send(
+          "<!DOCTYPE html><meta charset=utf-8><title>Metrics</title><p>Missing or invalid <code>token</code>.</p>"
+        );
+    }
+    const enc = JSON.stringify(secret);
+    res.type("html").send(`<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DRAFTIX metrics</title>
+<style>
+body{font:14px system-ui,system-ui,sans-serif;background:#0b0f17;color:#e7eefb;margin:1rem;line-height:1.45}
+pre{background:#121826;padding:1rem;border-radius:8px;overflow:auto;border:1px solid #223047;white-space:pre-wrap;word-break:break-word}
+p{color:#8899b7;font-size:13px;max-width:52rem}
+code{color:#c8d4e8}
+</style>
+<p>Private dashboard — keep this URL secret (it includes your token). Auto-refresh every 12s. For long-term analytics, add <a href="https://plausible.io" rel="noopener noreferrer">Plausible</a> or <a href="https://render.com/docs/web-service-metrics" rel="noopener noreferrer">Render metrics</a>.</p>
+<pre id="o">Loading…</pre>
+<script>
+const T=${enc};
+async function L(){
+  const r=await fetch("/api/admin/stats?token="+encodeURIComponent(T),{cache:"no-store"});
+  document.getElementById("o").textContent=await r.text();
+}
+L();setInterval(L,12000);
+</script></html>`);
+  });
 
   // ─── Per-IP socket-event rate limiter ───
   const ipEventLog = new Map(); // ip -> { event -> number[] }
@@ -729,6 +920,10 @@ async function main() {
 
   io.on("connection", (socket) => {
     let joinedCode = null;
+    try {
+      const n = io.engine.clientsCount;
+      if (n > traffic.peakSockets) traffic.peakSockets = n;
+    } catch (_) {}
 
     socket.on("createSession", (payload, cb) => withLimit(socket, "createSession", cb, () => {
       if (sessions.size >= MAX_SESSIONS) {
