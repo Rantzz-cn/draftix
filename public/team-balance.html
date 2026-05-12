@@ -7,7 +7,7 @@
     <meta name="color-scheme" content="dark" />
     <meta
       name="description"
-      content="DRAFTIX team balancer — fair Valorant customs for 2v2–5v5 from names and ranks. Free, no signup."
+      content="DRAFTIX team balancer - fair Valorant customs for 2v2-5v5 from names and ranks. Free, no signup."
     />
     <meta name="robots" content="index,follow" />
     <link rel="canonical" href="https://draftix.tech/team-balance.html" />
@@ -16,65 +16,157 @@
     <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="stylesheet" href="styles.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <title>Team balancer — DRAFTIX</title>
+    <title>Team balancer - DRAFTIX</title>
     <style>
       body.page-team-balance {
-        --font: var(--tb-font);
+        --font: 'Barlow', system-ui, -apple-system, sans-serif;
+        font-family: var(--font);
+      }
+      .page-team-balance .tb-wrap {
+        max-width: 1180px;
+        margin: 0 auto;
       }
       .tb-wrap {
         position: relative;
         z-index: 1;
-        padding: 28px 20px 56px;
+        padding: 0 0 1rem;
+      }
+      .tb-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.72fr);
+        gap: 2rem;
+        align-items: end;
+        padding: 1.5rem 0 3rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .tb-eyebrow {
+        display: inline-block;
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: var(--accent);
+        padding: 0.3rem 0.8rem;
+        background: var(--accent-lo);
+        border: 1px solid var(--accent-deep);
+        border-radius: 2px;
+        margin-bottom: 1.25rem;
       }
       h1.page-title {
-        font-family: var(--font);
+        font-family: 'Saira Condensed', 'Rajdhani', sans-serif;
         color: #fff;
-        font-size: clamp(1.75rem, 4vw, 2.15rem);
-        font-weight: 800;
-        margin: 0 0 0.65rem;
-        letter-spacing: 0.04em;
-        line-height: 1.15;
+        font-size: clamp(3rem, 8vw, 5.2rem);
+        font-weight: 900;
+        margin: 0 0 0.85rem;
+        letter-spacing: 0.08em;
+        line-height: 0.92;
+        text-transform: uppercase;
       }
       .lede {
         color: var(--muted);
-        margin: 0 0 10px;
-        font-size: 1rem;
-        max-width: 64ch;
-        font-weight: 400;
+        margin: 0;
+        font-size: 1.05rem;
+        max-width: 62ch;
+        line-height: 1.65;
       }
       .lede strong { color: var(--text); font-weight: 600; }
-      .fineprint {
-        font-size: 0.82rem;
-        color: var(--dim);
-        margin: 0 0 1.5rem;
-        max-width: 64ch;
-        line-height: 1.55;
+      .tb-hero-card {
+        position: relative;
+        overflow: hidden;
+        display: grid;
+        gap: 1rem;
+        padding: 1.35rem;
+        background: linear-gradient(180deg, var(--panel-2) 0%, var(--bg-2) 100%);
+        border: 1px solid var(--border-hi);
+        border-radius: var(--radius-lg);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35), 0 0 50px rgba(74, 141, 255, 0.08);
       }
-      .fineprint strong { color: var(--muted); font-weight: 600; }
+      .tb-hero-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 2px;
+        background: linear-gradient(90deg, var(--accent), var(--team-b), transparent);
+      }
+      .tb-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.65rem;
+      }
+      .tb-stat {
+        min-width: 0;
+        padding: 0.85rem;
+        background: rgba(255, 255, 255, 0.025);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+      }
+      .tb-stat strong {
+        display: block;
+        font-family: 'Saira Condensed', 'Rajdhani', sans-serif;
+        font-size: 1.45rem;
+        line-height: 1;
+        letter-spacing: 0.08em;
+        color: #fff;
+      }
+      .tb-stat span {
+        display: block;
+        margin-top: 0.35rem;
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .fineprint {
+        font-size: 0.88rem;
+        color: var(--muted);
+        margin: 0;
+        line-height: 1.6;
+      }
+      .fineprint strong { color: var(--text); font-weight: 700; }
+      .tb-tool {
+        display: grid;
+        grid-template-columns: minmax(260px, 0.45fr) minmax(0, 1fr);
+        gap: 1rem;
+        align-items: start;
+        padding-top: 2rem;
+      }
+      .tb-settings {
+        position: sticky;
+        top: 6.5rem;
+        display: grid;
+        gap: 1rem;
+      }
       .panel {
-        background: linear-gradient(165deg, var(--panel) 0%, rgba(14, 22, 38, 0.92) 100%);
+        background: linear-gradient(180deg, rgba(255,255,255,0.025) 0%, rgba(0,0,0,0.22) 100%);
         border: 1px solid var(--border);
         border-radius: var(--radius-lg);
-        padding: 1.25rem 1.15rem 1.35rem;
-        margin-bottom: 1rem;
-        box-shadow:
-          0 0 0 1px rgba(255, 70, 85, 0.06),
-          0 16px 48px rgba(0, 0, 0, 0.35);
+        padding: 1.25rem;
+        box-shadow: 0 16px 45px rgba(0, 0, 0, 0.22);
+      }
+      .panel--roster {
+        background: linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%);
+        border-color: var(--border-hi);
+        position: relative;
+        overflow: hidden;
+      }
+      .panel--roster::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 2px;
+        background: linear-gradient(90deg, var(--accent) 0%, transparent 70%);
       }
       .panel h2 {
         margin: 0 0 14px;
-        font-size: 0.72rem;
-        letter-spacing: 0.2em;
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.78rem;
+        letter-spacing: 0.22em;
         text-transform: uppercase;
         color: var(--accent);
         font-weight: 700;
-        font-family: var(--font);
       }
       fieldset.mode-field {
         border: 0;
@@ -83,12 +175,19 @@
         min-width: 0;
       }
       fieldset.mode-field legend.sr-only {
-        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-        overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
       .mode-pills {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
       }
       .mode-pills label {
@@ -96,18 +195,20 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        min-height: 46px;
         cursor: pointer;
-        border-radius: 10px;
-        padding: 10px 16px;
+        border-radius: var(--radius);
+        padding: 0.65rem 0.8rem;
+        font-family: 'Rajdhani', sans-serif;
         font-size: 0.92rem;
-        font-weight: 600;
-        font-family: var(--font);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
         border: 1px solid var(--border-hi);
         background: var(--panel-2);
         color: #c9d4ea;
         transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s;
         user-select: none;
-        min-width: 4.5rem;
       }
       .mode-pills label:hover {
         border-color: var(--team-b);
@@ -134,13 +235,16 @@
         color: #fff;
         box-shadow: 0 0 16px rgba(255, 70, 85, 0.18);
       }
-      .mode-pills label span { position: relative; z-index: 1; pointer-events: none; }
-      .mode-pills--split label { min-width: 7.5rem; }
-      #modeHint, #splitHint {
-        font-size: 0.82rem;
+      .mode-pills label span {
+        position: relative;
+        z-index: 1;
+        pointer-events: none;
+      }
+      #modeHint,
+      #splitHint {
+        font-size: 0.86rem;
         color: var(--muted);
         margin: 14px 0 0;
-        max-width: 72ch;
         line-height: 1.55;
       }
       .players-head {
@@ -149,73 +253,81 @@
         justify-content: space-between;
         align-items: center;
         gap: 10px;
-        margin-bottom: 14px;
+        margin-bottom: 1rem;
+        position: relative;
       }
       .players-head h2 { margin: 0; }
       .roster-meta {
+        margin-top: 0.2rem;
+        font-family: 'Rajdhani', sans-serif;
         font-size: 0.82rem;
         color: var(--muted);
         font-weight: 600;
-        font-family: var(--font);
+        letter-spacing: 0.08em;
+      }
+      #players {
+        display: grid;
+        gap: 0.65rem;
       }
       .pb-row {
         display: grid;
-        grid-template-columns: 1fr minmax(150px, 210px) auto;
-        gap: 10px;
+        grid-template-columns: minmax(0, 1fr) minmax(150px, 200px) 92px;
+        gap: 0.65rem;
         align-items: center;
-        margin-bottom: 10px;
       }
-      @media (max-width: 560px) {
-        .pb-row { grid-template-columns: 1fr 1fr; }
-        .pb-row .pb-remove { grid-column: 2; justify-self: end; }
-      }
-      .pb-row input.pb-name {
+      .pb-row input.pb-name,
+      .pb-row select.pb-rank {
         width: 100%;
-        padding: 10px 12px;
+        min-height: 44px;
         border-radius: var(--radius);
         border: 1px solid var(--border-hi);
-        background: var(--panel-3);
+        background: rgba(26, 37, 64, 0.86);
         color: var(--text);
-        font-size: 15px;
         font-family: var(--font);
       }
-      .pb-row input.pb-name:focus-visible {
+      .pb-row input.pb-name {
+        padding: 0.7rem 0.8rem;
+        font-size: 15px;
+      }
+      .pb-row select.pb-rank {
+        padding: 0.7rem 0.75rem;
+        font-size: 14px;
+      }
+      .pb-row input.pb-name:focus-visible,
+      .pb-row select.pb-rank:focus-visible {
         outline: 2px solid var(--team-b);
         outline-offset: 1px;
         border-color: var(--team-b);
       }
-      .pb-row select.pb-rank {
-        width: 100%;
-        padding: 10px 10px;
-        border-radius: var(--radius);
-        border: 1px solid var(--border-hi);
-        background: var(--panel-3);
-        color: var(--text);
-        font-size: 14px;
-        font-family: var(--font);
-      }
-      .pb-row select.pb-rank:focus-visible {
-        outline: 2px solid var(--team-b);
-        outline-offset: 1px;
-      }
       button.pb-remove {
+        min-height: 44px;
         background: transparent;
         border: 1px solid var(--border-hi);
         color: var(--muted);
         border-radius: var(--radius);
-        padding: 8px 12px;
+        padding: 0 0.8rem;
         cursor: pointer;
-        font-size: 13px;
-        font-family: var(--font);
-        font-weight: 500;
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
       }
-      button.pb-remove:hover { border-color: var(--accent); color: var(--accent-hi); }
-      button.pb-remove:focus-visible { outline: 2px solid var(--team-b); outline-offset: 2px; }
+      button.pb-remove:hover {
+        border-color: var(--accent);
+        color: var(--accent-hi);
+      }
+      button.pb-remove:focus-visible {
+        outline: 2px solid var(--team-b);
+        outline-offset: 2px;
+      }
       .actions {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
-        margin-top: 16px;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
         align-items: center;
       }
       .actions .hint {
@@ -224,16 +336,21 @@
         flex: 1 1 200px;
         min-width: 0;
       }
-      .actions button, #addPlayer {
+      .actions button,
+      #addPlayer {
+        min-height: 44px;
         cursor: pointer;
-        font-size: 15px;
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.86rem;
         font-weight: 700;
-        font-family: var(--font);
-        border-radius: 10px;
-        padding: 12px 18px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        border-radius: var(--radius);
+        padding: 0.75rem 1.1rem;
         border: 0;
       }
-      .actions button:focus-visible, #addPlayer:focus-visible {
+      .actions button:focus-visible,
+      #addPlayer:focus-visible {
         outline: 2px solid #fff;
         outline-offset: 2px;
       }
@@ -241,7 +358,6 @@
         background: var(--panel-2);
         color: var(--text);
         border: 1px solid var(--border-hi);
-        font-weight: 600;
       }
       #addPlayer:hover {
         border-color: var(--team-b);
@@ -259,16 +375,50 @@
         background: transparent;
         color: var(--muted);
         border: 1px solid var(--border-hi);
-        font-weight: 600;
       }
       #clearRoster:hover {
         color: var(--text);
         border-color: var(--muted);
       }
+      .pb-result-summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin-bottom: 1rem;
+      }
+      .pb-summary-chip {
+        min-width: 0;
+        padding: 0.85rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.025);
+      }
+      .pb-summary-chip span {
+        display: block;
+        margin-bottom: 0.35rem;
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .pb-summary-chip strong {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: 'Saira Condensed', 'Rajdhani', sans-serif;
+        font-size: 1.25rem;
+        line-height: 1;
+        letter-spacing: 0.08em;
+        color: #fff;
+      }
       .pb-meta {
+        grid-column: 1 / -1;
         color: var(--muted);
         font-size: 0.88rem;
-        margin: 0 0 12px;
+        margin: 0;
         line-height: 1.55;
         font-family: var(--font);
       }
@@ -284,10 +434,10 @@
         grid-template-columns: 1fr 1fr;
         gap: 14px;
       }
-      @media (max-width: 640px) { .pb-teams { grid-template-columns: 1fr; } }
       .pb-team {
-        border-radius: 12px;
-        padding: 16px 16px 8px;
+        min-width: 0;
+        border-radius: var(--radius);
+        padding: 1rem;
         border: 1px solid var(--border-hi);
         font-family: var(--font);
       }
@@ -301,34 +451,95 @@
         border-color: rgba(74, 141, 255, 0.45);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
       }
+      .pb-team-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 0.85rem;
+      }
       .pb-team h3 {
-        margin: 0 0 6px;
-        font-size: 1rem;
+        margin: 0 0 0.2rem;
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1.02rem;
         font-weight: 700;
-        color: #fff;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
       }
       .pb-team-a h3 { color: var(--team-a); }
       .pb-team-b h3 { color: var(--team-b); }
       .pb-team-mmr {
-        margin: 0 0 10px;
+        margin: 0;
         font-size: 0.78rem;
         color: var(--muted);
         font-weight: 500;
       }
-      .pb-team ul { list-style: none; padding: 0; margin: 0 0 8px; }
-      .pb-team li {
-        padding: 8px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      .pb-team-count {
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        width: 2.15rem;
+        height: 2.15rem;
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-hi);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.86rem;
+        color: #fff;
+      }
+      .pb-team ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 0.5rem;
+      }
+      .pb-team li,
+      .pb-bench li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+        min-height: 48px;
+        padding: 0.65rem 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.055);
+        border-radius: var(--radius-sm);
+        background: rgba(3, 7, 15, 0.3);
         font-size: 0.94rem;
         font-weight: 500;
       }
-      .pb-team li:last-child { border-bottom: 0; }
+      .pb-player-main {
+        min-width: 0;
+        display: grid;
+        gap: 0.12rem;
+      }
+      .pb-player-main strong {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #fff;
+      }
+      .pb-player-main small {
+        color: var(--muted);
+        font-size: 0.76rem;
+      }
+      .pb-player-score {
+        flex: 0 0 auto;
+        display: grid;
+        place-items: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-hi);
+        color: var(--muted);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.78rem;
+      }
       .pb-bench {
         margin-top: 16px;
         padding: 16px;
-        border-radius: 12px;
+        border-radius: var(--radius);
         border: 1px dashed var(--border-hi);
         background: rgba(8, 12, 24, 0.55);
         font-family: var(--font);
@@ -336,26 +547,30 @@
       .pb-bench h3 {
         margin: 0 0 6px;
         color: #c9d4ea;
+        font-family: 'Rajdhani', sans-serif;
         font-size: 0.95rem;
         font-weight: 700;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
       }
-      .pb-bench p { margin: 0 0 10px; font-size: 0.78rem; color: var(--muted); }
-      .pb-bench ul { list-style: none; padding: 0; margin: 0; }
-      .pb-bench li {
-        padding: 6px 0;
-        font-size: 0.88rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        font-weight: 500;
+      .pb-bench p {
+        margin: 0 0 10px;
+        font-size: 0.78rem;
+        color: var(--muted);
       }
-      .pb-bench li:last-child { border-bottom: 0; }
-      /* ─── Result modal (DRAFTIX shell) ─── */
+      .pb-bench ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 0.5rem;
+      }
       .pb-dialog {
         border: none;
         padding: 0;
         margin: auto;
         max-width: calc(100vw - 24px);
-        width: min(580px, 100%);
+        width: min(760px, 100%);
         background: transparent;
       }
       .pb-dialog::backdrop {
@@ -365,13 +580,10 @@
       }
       .pb-dialog__sheet {
         font-family: var(--font);
-        background: linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%);
+        background: linear-gradient(180deg, #0d1424 0%, var(--bg-2) 100%);
         border: 1px solid var(--border-hi);
         border-radius: var(--radius-lg);
-        box-shadow:
-          0 0 0 1px rgba(255, 70, 85, 0.1),
-          0 0 48px rgba(255, 70, 85, 0.08),
-          0 28px 80px rgba(0, 0, 0, 0.55);
+        box-shadow: 0 0 0 1px rgba(255, 70, 85, 0.1), 0 0 48px rgba(255, 70, 85, 0.08), 0 28px 80px rgba(0, 0, 0, 0.55);
         overflow: hidden;
       }
       .pb-dialog__head {
@@ -379,15 +591,17 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: 16px 18px 14px;
+        padding: 1.05rem 1.25rem;
         border-bottom: 1px solid var(--border);
-        background: linear-gradient(90deg, var(--accent-lo) 0%, transparent 40%);
+        background:
+          linear-gradient(90deg, rgba(255, 70, 85, 0.17) 0%, transparent 38%),
+          rgba(255, 255, 255, 0.015);
       }
       .pb-dialog__head h2 {
         margin: 0;
+        font-family: 'Rajdhani', sans-serif;
         font-size: 1.05rem;
         font-weight: 800;
-        font-family: var(--font);
         color: #fff;
         letter-spacing: 0.14em;
         text-transform: uppercase;
@@ -412,9 +626,12 @@
         border-color: var(--accent);
         background: var(--accent-lo);
       }
-      .pb-dialog__x:focus-visible { outline: 2px solid var(--team-b); outline-offset: 2px; }
+      .pb-dialog__x:focus-visible {
+        outline: 2px solid var(--team-b);
+        outline-offset: 2px;
+      }
       .pb-dialog__body {
-        padding: 14px 18px 18px;
+        padding: 1rem 1.25rem 1.25rem;
         max-height: min(70vh, 520px);
         overflow-y: auto;
       }
@@ -423,28 +640,31 @@
         flex-wrap: wrap;
         gap: 10px;
         justify-content: flex-end;
-        padding: 12px 18px 16px;
+        padding: 1rem 1.25rem 1.15rem;
         border-top: 1px solid var(--border);
         background: rgba(6, 9, 18, 0.75);
       }
-      .pb-dialog__foot .pb-copy {
+      .pb-dialog__foot .pb-copy,
+      .pb-dialog__closebtn {
+        font-family: 'Rajdhani', sans-serif;
         font-size: 0.82rem;
         font-weight: 700;
-        font-family: var(--font);
         padding: 10px 16px;
         border-radius: var(--radius);
         cursor: pointer;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .pb-dialog__foot .pb-copy {
         background: var(--accent);
         color: #fff;
         border: 1px solid transparent;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
+        min-width: 190px;
       }
       .pb-dialog__foot .pb-copy:hover:not(:disabled) {
         background: var(--accent-hi);
         box-shadow: 0 0 18px rgba(255, 70, 85, 0.4);
       }
-      .pb-dialog__foot .pb-copy:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
       .pb-dialog__foot .pb-copy.pb-copy--done {
         border-color: rgba(51, 212, 137, 0.5);
         background: rgba(51, 212, 137, 0.15);
@@ -456,50 +676,74 @@
         background: var(--panel-3);
         color: var(--muted);
       }
-      .pb-dialog__foot .pb-copy:disabled:hover {
-        box-shadow: none;
-        background: var(--panel-3);
-      }
       .pb-dialog__closebtn {
-        font-size: 0.82rem;
-        font-weight: 700;
-        font-family: var(--font);
-        padding: 10px 18px;
-        border-radius: var(--radius);
-        cursor: pointer;
         background: transparent;
         color: var(--text);
         border: 1px solid var(--border-hi);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
       }
       .pb-dialog__closebtn:hover {
         border-color: var(--accent);
         color: var(--accent-hi);
         background: var(--accent-lo);
       }
-      .pb-dialog__closebtn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-      footer.foot {
-        margin-top: 36px;
-        padding-top: 20px;
-        border-top: 1px solid var(--border);
-        color: var(--muted);
-        font-size: 0.82rem;
-        font-family: var(--font);
+      @media (max-width: 980px) {
+        .tb-hero,
+        .tb-tool {
+          grid-template-columns: 1fr;
+        }
+        .tb-settings {
+          position: static;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
       }
-      footer.foot a { color: var(--muted); text-decoration: none; }
-      footer.foot a:hover { color: var(--accent); }
+      @media (max-width: 640px) {
+        .tb-hero {
+          padding-top: 0.75rem;
+          padding-bottom: 2rem;
+        }
+        .tb-stat-grid,
+        .tb-settings,
+        .pb-teams,
+        .pb-result-summary {
+          grid-template-columns: 1fr;
+        }
+        .panel {
+          padding: 1rem;
+        }
+        .actions button,
+        #addPlayer {
+          flex: 1 1 100%;
+        }
+        .actions .hint {
+          flex-basis: 100%;
+        }
+      }
+      @media (max-width: 560px) {
+        .pb-row {
+          grid-template-columns: 1fr;
+        }
+        .pb-row .pb-remove {
+          justify-self: stretch;
+        }
+      }
     </style>
   </head>
   <body class="page-landing page-team-balance">
     <div class="landing">
+      <div class="landing-bg" aria-hidden="true">
+        <div class="bg-grid"></div>
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-noise"></div>
+      </div>
+
       <nav class="landing-nav">
         <a href="/" class="brand brand-sm" aria-label="DRAFTIX home">
           <img class="brand-mark" src="images/draftix.png" alt="DRAFTIX" decoding="async" />
           <span class="brand-name">DRAFT<span>IX</span></span>
         </a>
         <ul class="landing-nav-links">
-          <li><span class="nosignup-badge" title="No signup, no install — just open and play">No signup</span></li>
+          <li><span class="nosignup-badge" title="No signup, no install - just open and play">No signup</span></li>
           <li><a href="/#features">Features</a></li>
           <li><a href="/#how">How it works</a></li>
           <li><a href="/#pool">Map pool</a></li>
@@ -508,87 +752,145 @@
         </ul>
       </nav>
 
-      <div class="tb-wrap">
-
-      <h1 class="page-title">Team balancer</h1>
-      <p class="lede">
-        Add names and ranks, pick lobby size, choose how to split, then <strong>Split teams</strong>. Results open in a
-        window you can copy to Discord. Rank scores are only used for math here — not Riot MMR.
-      </p>
-      <p class="fineprint">
-        <strong>By rank</strong> benches the lowest-rated extras when the lobby is full, then snakes starters.
-        <strong>Random mix</strong> shuffles who plays when there are extras; if everyone fits one match, sides are fully random.
-      </p>
-
-      <section class="panel" aria-labelledby="modeH">
-        <h2 id="modeH">Lobby size</h2>
-        <fieldset class="mode-field" aria-labelledby="modeH">
-          <legend class="sr-only">Players per team</legend>
-          <div class="mode-pills" role="radiogroup" aria-describedby="modeHint">
-            <label>
-              <input type="radio" name="pbMode" value="2" />
-              <span>2v2</span>
-            </label>
-            <label>
-              <input type="radio" name="pbMode" value="3" />
-              <span>3v3</span>
-            </label>
-            <label>
-              <input type="radio" name="pbMode" value="4" />
-              <span>4v4</span>
-            </label>
-            <label>
-              <input type="radio" name="pbMode" value="5" checked />
-              <span>5v5</span>
-            </label>
-          </div>
-        </fieldset>
-        <p id="modeHint"></p>
-      </section>
-
-      <section class="panel" aria-labelledby="splitH">
-        <h2 id="splitH">Split style</h2>
-        <fieldset class="mode-field" aria-labelledby="splitH">
-          <legend class="sr-only">How to build teams</legend>
-          <div class="mode-pills mode-pills--split" role="radiogroup" aria-describedby="splitHint">
-            <label>
-              <input type="radio" name="pbSplit" value="rank" checked />
-              <span>By rank</span>
-            </label>
-            <label>
-              <input type="radio" name="pbSplit" value="random" />
-              <span>Random mix</span>
-            </label>
-          </div>
-        </fieldset>
-        <p id="splitHint"></p>
-      </section>
-
-      <section class="panel" aria-labelledby="rosterH">
-        <div class="players-head">
+      <main class="tb-wrap">
+        <header class="tb-hero">
           <div>
-            <h2 id="rosterH">Roster</h2>
-            <p class="roster-meta" id="rosterCount" aria-live="polite">0 players named</p>
+            <span class="tb-eyebrow">Custom lobby utility</span>
+            <h1 class="page-title">Team balancer</h1>
+            <p class="lede">
+              Add names and ranks, pick the lobby size, choose how to split, then
+              <strong>Split teams</strong>. Results open in a Discord-ready window.
+            </p>
           </div>
-          <button type="button" id="addPlayer">+ Add row</button>
-        </div>
-        <div id="players"></div>
-        <div class="actions">
-          <button type="button" id="splitTeams">Split teams</button>
-          <button type="button" id="clearRoster">Clear names</button>
-          <span class="hint">Need at least 2 named players. Empty rows are ignored.</span>
-        </div>
-      </section>
+          <aside class="tb-hero-card" aria-label="Balancer rules">
+            <div class="tb-stat-grid">
+              <div class="tb-stat"><strong>2v2</strong><span>Small lobbies</span></div>
+              <div class="tb-stat"><strong>5v5</strong><span>Full customs</span></div>
+              <div class="tb-stat"><strong>Copy</strong><span>Discord ready</span></div>
+            </div>
+            <p class="fineprint">
+              <strong>By rank</strong> benches lowest-rated extras when overfull, then snakes starters.
+              <strong>Random mix</strong> shuffles who plays first, then balances the field.
+            </p>
+          </aside>
+        </header>
 
-      <footer class="foot">
-        <a href="/privacy.html">Privacy</a>
-        ·
-        <a href="/terms.html">Terms</a>
-        ·
-        Not affiliated with Riot Games.
-      </footer>
-      </div>
+        <div class="tb-tool">
+          <aside class="tb-settings" aria-label="Team balance settings">
+            <section class="panel" aria-labelledby="modeH">
+              <h2 id="modeH">Lobby size</h2>
+              <fieldset class="mode-field" aria-labelledby="modeH">
+                <legend class="sr-only">Players per team</legend>
+                <div class="mode-pills" role="radiogroup" aria-describedby="modeHint">
+                  <label>
+                    <input type="radio" name="pbMode" value="2" />
+                    <span>2v2</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="pbMode" value="3" />
+                    <span>3v3</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="pbMode" value="4" />
+                    <span>4v4</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="pbMode" value="5" checked />
+                    <span>5v5</span>
+                  </label>
+                </div>
+              </fieldset>
+              <p id="modeHint"></p>
+            </section>
+
+            <section class="panel" aria-labelledby="splitH">
+              <h2 id="splitH">Split style</h2>
+              <fieldset class="mode-field" aria-labelledby="splitH">
+                <legend class="sr-only">How to build teams</legend>
+                <div class="mode-pills mode-pills--split" role="radiogroup" aria-describedby="splitHint">
+                  <label>
+                    <input type="radio" name="pbSplit" value="rank" checked />
+                    <span>By rank</span>
+                  </label>
+                  <label>
+                    <input type="radio" name="pbSplit" value="random" />
+                    <span>Random mix</span>
+                  </label>
+                </div>
+              </fieldset>
+              <p id="splitHint"></p>
+            </section>
+          </aside>
+
+          <section class="panel panel--roster" aria-labelledby="rosterH">
+            <div class="players-head">
+              <div>
+                <h2 id="rosterH">Roster</h2>
+                <p class="roster-meta" id="rosterCount" aria-live="polite">0 players named</p>
+              </div>
+              <button type="button" id="addPlayer">Add row</button>
+            </div>
+            <div id="players"></div>
+            <div class="actions">
+              <button type="button" id="splitTeams">Split teams</button>
+              <button type="button" id="clearRoster">Clear names</button>
+              <span class="hint">Need at least 2 named players. Empty rows are ignored.</span>
+            </div>
+          </section>
+        </div>
+      </main>
     </div>
+
+    <footer id="siteFooter" class="site-footer">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="brand brand-sm">
+            <img class="brand-mark" src="images/draftix.png" alt="" />
+            <span class="brand-name">DRAFT<span>IX</span></span>
+          </div>
+          <p class="footer-tag">Pick. Ban. Win.</p>
+          <p class="footer-blurb">Open, real-time map veto + agent ban tooling for Valorant teams.</p>
+          <span class="nosignup-pill footer-pill">No signup required</span>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="/app">Open app</a></li>
+            <li><a href="/#features">Features</a></li>
+            <li><a href="/#how">How it works</a></li>
+            <li><a href="/#pool">Map pool</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Utilities</h4>
+          <ul>
+            <li><a href="/team-balance.html">Team balancer</a></li>
+            <li><a href="/status.html">Server status</a></li>
+            <li><a href="/report" target="_blank" rel="noopener noreferrer">Feedback</a></li>
+          </ul>
+        </div>
+        <div class="footer-col footer-legal">
+          <h4>Legal</h4>
+          <ul class="footer-legal-links">
+            <li><a href="/privacy.html">Privacy Policy</a></li>
+            <li><a href="/terms.html">Terms of Service</a></li>
+          </ul>
+          <p class="footer-disclaimer">
+            DRAFTIX is not endorsed by Riot Games and does not reflect the views or opinions
+            of Riot Games or anyone officially involved in producing or managing VALORANT.
+          </p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; <span id="footerYear">2026</span> DRAFTIX</span>
+        <span class="footer-sep">-</span>
+        <a href="/privacy.html">Privacy</a>
+        <span class="footer-sep">-</span>
+        <a href="/terms.html">Terms</a>
+        <span class="footer-sep">-</span>
+        <span>Made for the community by Tradz</span>
+      </div>
+    </footer>
 
     <dialog class="pb-dialog" id="resultDialog" aria-labelledby="pbDialogTitle">
       <div class="pb-dialog__sheet">

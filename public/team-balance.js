@@ -1,6 +1,6 @@
 /**
- * DRAFTIX — lobby team balancer (client-only).
- * Internal MMR scale: Iron 1 = 0 … Radiant = 25 (split math only).
+ * DRAFTIX â€” lobby team balancer (client-only).
+ * Internal MMR scale: Iron 1 = 0 â€¦ Radiant = 25 (split math only).
  */
 (function () {
   "use strict";
@@ -105,7 +105,7 @@
   function updateRosterCount() {
     const n = countNamedPlayers();
     rosterCountEl.textContent =
-      n + " named player" + (n === 1 ? "" : "s") + " · " + playersEl.children.length + " rows";
+      n + " named player" + (n === 1 ? "" : "s") + " Â· " + playersEl.children.length + " rows";
   }
 
   function readPlayers() {
@@ -133,9 +133,9 @@
   }
 
   function teamStatsLine(team) {
-    if (!team.length) return "—";
+    if (!team.length) return "â€”";
     const avg = sumMmr(team) / team.length;
-    return "Avg " + avg.toFixed(1) + " · Total " + sumMmr(team);
+    return "Avg " + avg.toFixed(1) + " Â· Total " + sumMmr(team);
   }
 
   function snakeSplit(sortedStarters) {
@@ -207,13 +207,13 @@
     const n = result.teamA.length + result.teamB.length + result.bench.length;
     const style = result.mode === "random" ? "Random mix" : "By rank";
     const lines = [
-      "DRAFTIX team balancer — " + perTeam + "v" + perTeam + " (" + style + ")",
+      "DRAFTIX team balancer â€” " + perTeam + "v" + perTeam + " (" + style + ")",
       "Players: " + n + (n > cap ? " (" + (n - cap) + " benched)" : ""),
       "",
-      "Team A (" + result.teamA.length + ") — " + teamStatsLine(result.teamA),
+      "Team A (" + result.teamA.length + ") â€” " + teamStatsLine(result.teamA),
     ];
     for (const p of result.teamA) lines.push("- " + p.name + " (" + p.label + ")");
-    lines.push("", "Team B (" + result.teamB.length + ") — " + teamStatsLine(result.teamB));
+    lines.push("", "Team B (" + result.teamB.length + ") â€” " + teamStatsLine(result.teamB));
     for (const p of result.teamB) lines.push("- " + p.name + " (" + p.label + ")");
     if (result.bench.length) {
       lines.push("", "Bench (" + result.bench.length + ")");
@@ -226,45 +226,52 @@
     const cap = perTeam * 2;
     const n = result.teamA.length + result.teamB.length + result.bench.length;
     const diff = Math.abs(sumMmr(result.teamA) - sumMmr(result.teamB));
+    const lobbyState = n > cap ? result.bench.length + " benched" : n < cap ? "Short lobby" : "Full lobby";
     const modeLine =
       result.mode === "random"
-        ? "Random mix — shuffled who sits when overfull; starters snaked by rank. Full lobby = random halves."
-        : "By rank — strongest field first, extras bench lowest rated, then snake draft.";
+        ? "Random mix shuffled who plays first, then balanced the starters."
+        : "By rank fielded the highest-rated starters, then snake drafted sides.";
 
     let html =
-      '<p class="pb-meta">' +
+      '<section class="pb-result-summary" aria-label="Team balance summary">' +
+      '<div class="pb-summary-chip"><span>Players</span><strong>' +
       n +
-      " player" +
-      (n === 1 ? "" : "s") +
-      " · " +
+      "</strong></div>" +
+      '<div class="pb-summary-chip"><span>Mode</span><strong>' +
       perTeam +
       "v" +
       perTeam +
-      (n > cap ? " · " + (n - cap) + " benched" : n < cap ? " · short lobby" : " · full lobby") +
-      " · ΔMMR " +
+      "</strong></div>" +
+      '<div class="pb-summary-chip"><span>Status</span><strong>' +
+      escapeHtml(lobbyState) +
+      "</strong></div>" +
+      '<div class="pb-summary-chip"><span>MMR diff</span><strong>' +
       diff +
-      " · " +
-      modeLine +
-      "</p>";
+      "</strong></div>" +
+      '<p class="pb-meta">' +
+      escapeHtml(modeLine) +
+      "</p></section>";
 
     function card(team, title, cls) {
       let block =
         '<div class="pb-team ' +
         cls +
-        '"><h3>' +
+        '"><div class="pb-team-head"><div><h3>' +
         title +
-        " (" +
-        team.length +
-        ')</h3><p class="pb-team-mmr">' +
+        '</h3><p class="pb-team-mmr">' +
         teamStatsLine(team) +
-        "</p><ul>";
+        '</p></div><span class="pb-team-count">' +
+        team.length +
+        "</span></div><ul>";
       for (const p of team) {
         block +=
-          "<li><strong>" +
+          '<li><span class="pb-player-main"><strong>' +
           escapeHtml(p.name) +
-          "</strong> · " +
-          escapeHtml(p.label || "—") +
-          "</li>";
+          '</strong><small>' +
+          escapeHtml(p.label || "Unranked") +
+          '</small></span><span class="pb-player-score">' +
+          p.mmr +
+          "</span></li>";
       }
       block += "</ul></div>";
       return block;
@@ -288,11 +295,13 @@
         result.bench
           .map(
             (p) =>
-              "<li><strong>" +
+              '<li><span class="pb-player-main"><strong>' +
               escapeHtml(p.name) +
-              "</strong> · " +
-              escapeHtml(p.label || "—") +
-              "</li>"
+              '</strong><small>' +
+              escapeHtml(p.label || "Unranked") +
+              '</small></span><span class="pb-player-score">' +
+              p.mmr +
+              "</span></li>"
           )
           .join("") +
         "</ul></div>";
