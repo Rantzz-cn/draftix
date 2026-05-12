@@ -614,6 +614,7 @@ async function main() {
       try {
         const u = new URL(webhookUrl);
         if (u.protocol !== "https:" || !isAllowedDiscordWebhookHost(u.hostname)) {
+          console.warn("Feedback: webhook URL host not allowed:", u.hostname);
           return resolve(false);
         }
         const body = JSON.stringify(payload);
@@ -625,22 +626,37 @@ async function main() {
             headers: {
               "Content-Type": "application/json",
               "Content-Length": Buffer.byteLength(body),
+              "User-Agent": "DRAFTIX-Feedback/1.1",
             },
-            timeout: 8000,
+            timeout: 12000,
           },
           (up) => {
-            up.resume();
-            resolve(up.statusCode >= 200 && up.statusCode < 300);
+            const chunks = [];
+            up.on("data", (c) => chunks.push(c));
+            up.on("end", () => {
+              const code = up.statusCode || 0;
+              const ok = code >= 200 && code < 300;
+              if (!ok) {
+                const snippet = Buffer.concat(chunks).toString("utf8").slice(0, 800);
+                console.warn("Feedback: Discord webhook HTTP", code, snippet || "(empty body)");
+              }
+              resolve(ok);
+            });
           }
         );
-        reqOut.on("error", () => resolve(false));
+        reqOut.on("error", (e) => {
+          console.warn("Feedback: Discord webhook request error:", e.message);
+          resolve(false);
+        });
         reqOut.on("timeout", () => {
           reqOut.destroy();
+          console.warn("Feedback: Discord webhook request timeout");
           resolve(false);
         });
         reqOut.write(body);
         reqOut.end();
-      } catch (_) {
+      } catch (e) {
+        console.warn("Feedback: Discord webhook URL error:", e.message);
         resolve(false);
       }
     });
@@ -675,15 +691,21 @@ async function main() {
       return res.status(500).json({ ok: false, error: "Could not save feedback — try again later." });
     }
 
-    const hook = process.env.FEEDBACK_DISCORD_WEBHOOK_URL;
+    const hookRaw = process.env.FEEDBACK_DISCORD_WEBHOOK_URL;
+    const hook = String(hookRaw || "")
+      .trim()
+      .replace(/^["']|["']$/g, "");
     if (hook && /^https:\/\//.test(hook)) {
       const head = `[${kind}] ${page ? `(${page}) ` : ""}${contact ? contact + " — " : ""}`;
       let chunk = message.slice(0, 1900);
       if (message.length > 1900) chunk += "…";
-      const content = (head + chunk).slice(0, 1950);
-      postDiscordWebhook(hook, { username: "DRAFTIX feedback", content }).then((ok) => {
-        if (!ok) console.warn("Feedback: Discord webhook delivery failed (check URL or Render logs).");
+      const content = (head + chunk).slice(0, 1990);
+      // Omit `username` — Discord sometimes rejects custom names; default webhook label is enough.
+      postDiscordWebhook(hook, { content }).then((ok) => {
+        if (!ok) console.warn("Feedback: Discord webhook delivery failed — check Render logs for HTTP body.");
       });
+    } else if (hookRaw && String(hookRaw).trim()) {
+      console.warn("Feedback: FEEDBACK_DISCORD_WEBHOOK_URL is set but not a valid https URL.");
     }
 
     res.json({ ok: true });
