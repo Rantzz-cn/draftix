@@ -90,10 +90,7 @@
     const tr = data.traffic || {};
     grid.appendChild(card("GET / (landing)", String(tr.landingViews ?? "—"), "Since process start"));
     grid.appendChild(card("GET /app", String(tr.appShellViews ?? "—"), "App shell loads"));
-    grid.appendChild(card("Feedback posts", String(tr.feedbackTotal ?? "—"), "Successful /api/feedback"));
-    grid.appendChild(
-      card("Counters since", fmtTime(tr.since), "Resets on deploy / restart")
-    );
+    grid.appendChild(card("Counters since", fmtTime(tr.since), "Resets on deploy / restart"));
 
     grid.appendChild(section("Catalog"));
     const cat = data.catalog || {};

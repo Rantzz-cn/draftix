@@ -108,7 +108,6 @@ function randomCode() {
 // can never accidentally join a different session.
 const DATA_DIR = path.join(__dirname, "data");
 const CODE_LOG_PATH = path.join(DATA_DIR, "codes.log");
-const FEEDBACK_LOG_PATH = path.join(DATA_DIR, "feedback.log");
 const usedCodes = new Set();
 
 async function loadUsedCodes() {
@@ -484,11 +483,8 @@ async function main() {
     since: Date.now(),
     landingViews: 0,
     appShellViews: 0,
-    feedbackTotal: 0,
     peakSockets: 0,
   };
-
-  app.use(express.json({ limit: "24kb" }));
 
   // ─── Trust proxy ────────────────────────────────────
   // Behind nginx/Caddy/Cloudflare we MUST trust the X-Forwarded-* headers so
@@ -588,141 +584,39 @@ async function main() {
     });
   });
 
-  const feedbackLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 12,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: "Too many submissions — try again later.",
-  });
-
-  const FEEDBACK_KINDS = new Set(["feedback", "bug", "other"]);
-  const FEEDBACK_MSG_MAX = 4000;
-
-  function isAllowedDiscordWebhookHost(hostname) {
-    const h = String(hostname || "").toLowerCase();
-    return (
-      h === "discord.com" ||
-      h === "discordapp.com" ||
-      h.endsWith(".discord.com") ||
-      h.endsWith(".discordapp.com")
-    );
-  }
-
-  function postDiscordWebhook(webhookUrl, payload, attempt) {
-    const n = Number(attempt) || 0;
-    return new Promise((resolve) => {
-      try {
-        const u = new URL(webhookUrl);
-        if (u.protocol !== "https:" || !isAllowedDiscordWebhookHost(u.hostname)) {
-          console.warn("Feedback: webhook URL host not allowed:", u.hostname);
-          return resolve(false);
-        }
-        const body = JSON.stringify(payload);
-        const reqOut = https.request(
-          {
-            hostname: u.hostname,
-            path: u.pathname + u.search,
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Content-Length": Buffer.byteLength(body),
-              "User-Agent": "DRAFTIX-Feedback/1.1",
-              Connection: "close",
-            },
-            timeout: 12000,
-          },
-          (up) => {
-            const chunks = [];
-            up.on("data", (c) => chunks.push(c));
-            up.on("end", () => {
-              const code = up.statusCode || 0;
-              const snippet = Buffer.concat(chunks).toString("utf8").slice(0, 800);
-              if (code === 429 && n < 1) {
-                const sec = parseFloat(up.headers["retry-after"]);
-                const ms = Math.min(8000, Math.max(800, (Number.isFinite(sec) ? sec : 2) * 1000));
-                console.warn("Feedback: Discord webhook 429 — retrying once after", ms, "ms");
-                setTimeout(() => {
-                  postDiscordWebhook(webhookUrl, payload, n + 1).then(resolve);
-                }, ms);
-                return;
-              }
-              const ok = code >= 200 && code < 300;
-              if (!ok) {
-                console.warn("Feedback: Discord webhook HTTP", code, snippet || "(empty body)");
-              }
-              resolve(ok);
-            });
-          }
-        );
-        reqOut.on("error", (e) => {
-          console.warn("Feedback: Discord webhook request error:", e.message);
-          resolve(false);
-        });
-        reqOut.on("timeout", () => {
-          reqOut.destroy();
-          console.warn("Feedback: Discord webhook request timeout");
-          resolve(false);
-        });
-        reqOut.write(body);
-        reqOut.end();
-      } catch (e) {
-        console.warn("Feedback: Discord webhook URL error:", e.message);
-        resolve(false);
-      }
-    });
-  }
-
-  app.post("/api/feedback", feedbackLimiter, async (req, res) => {
-    // Honeypot: never use name "website" — browsers autofill it and block real users on 2nd submit.
-    const hpFilled =
-      String(req.body.dx_hp || "").trim() || String(req.body.website || "").trim();
-    if (hpFilled) {
-      return res.status(400).json({ ok: false, error: "Invalid request" });
-    }
-    const kindRaw = clean(req.body && req.body.kind, 16).toLowerCase() || "feedback";
-    const kind = FEEDBACK_KINDS.has(kindRaw) ? kindRaw : "feedback";
-    const message = clean(req.body && req.body.message, FEEDBACK_MSG_MAX);
-    if (!message || message.length < 4) {
-      return res.status(400).json({ ok: false, error: "Please write a bit more detail (4+ characters)." });
-    }
-    const contact = clean(req.body && req.body.contact, 120);
-    const page = clean(req.body && req.body.page, 240);
-    const row = {
-      ts: Date.now(),
-      kind,
-      message,
-      contact: contact || undefined,
-      page: page || undefined,
-      ip: req.ip || "",
-    };
-    traffic.feedbackTotal++;
-    try {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-      await fsp.appendFile(FEEDBACK_LOG_PATH, JSON.stringify(row) + "\n");
-    } catch (e) {
-      console.warn("Feedback log write failed:", e.message);
-      return res.status(500).json({ ok: false, error: "Could not save feedback — try again later." });
-    }
-
-    const hookRaw = process.env.FEEDBACK_DISCORD_WEBHOOK_URL;
-    const hook = String(hookRaw || "")
+  // ─── Public “report / feedback” → Discord (no form, no webhook) ───
+  function isSafeReportsDiscordUrl(raw) {
+    const u = String(raw || "")
       .trim()
       .replace(/^["']|["']$/g, "");
-    if (hook && /^https:\/\//.test(hook)) {
-      const head = `[${kind}] ${page ? `(${page}) ` : ""}${contact ? contact + " — " : ""}`;
-      let chunk = message.slice(0, 1900);
-      if (message.length > 1900) chunk += "…";
-      const content = (head + chunk).slice(0, 1990);
-      // Omit `username` — Discord sometimes rejects custom names; default webhook label is enough.
-      postDiscordWebhook(hook, { content }).then((ok) => {
-        if (!ok) console.warn("Feedback: Discord webhook delivery failed — check Render logs for HTTP body.");
-      });
-    } else if (hookRaw && String(hookRaw).trim()) {
-      console.warn("Feedback: FEEDBACK_DISCORD_WEBHOOK_URL is set but not a valid https URL.");
-    }
+    if (!u || u.length > 512) return "";
+    try {
+      const p = new URL(u);
+      if (p.protocol !== "https:") return "";
+      const h = p.hostname.toLowerCase();
+      if (
+        h === "discord.com" ||
+        h === "www.discord.com" ||
+        h === "discord.gg" ||
+        h === "www.discord.gg"
+      ) {
+        return u;
+      }
+    } catch (_) {}
+    return "";
+  }
 
-    res.json({ ok: true });
+  app.get("/report", (_req, res) => {
+    const target = isSafeReportsDiscordUrl(process.env.REPORTS_DISCORD_URL);
+    if (!target) {
+      return res
+        .status(404)
+        .type("html")
+        .send(
+          "<!DOCTYPE html><meta charset=utf-8><title>Reports</title><body style=font-family:system-ui;padding:2rem;background:#0b0f17;color:#e7eefb><p>Set <code>REPORTS_DISCORD_URL</code> on the server to a Discord invite or channel link (<code>https://discord.gg/…</code> or <code>https://discord.com/channels/…</code>).</p></body>"
+        );
+    }
+    res.redirect(302, target);
   });
 
   // ─── Image proxy for canvas exports ─────────────────
@@ -884,7 +778,6 @@ async function main() {
         since: traffic.since,
         landingViews: traffic.landingViews,
         appShellViews: traffic.appShellViews,
-        feedbackTotal: traffic.feedbackTotal,
         peakSockets: traffic.peakSockets,
       },
     });
