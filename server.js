@@ -518,10 +518,10 @@ async function main() {
       "https://media.valorant-api.com",
       "https://valorant-api.com",
     ],
-    // Socket.io will negotiate either ws:// or wss:// to the same origin. In
-    // dev we also allow ws to any port (Live Server scenario).
+    // connect-src: include cdn.socket.io so DevTools / browsers can fetch
+    // socket.io.min.js.map when using the CDN client (harmless; optional).
     connectSrc: isProd
-      ? ["'self'", "wss:", "https://valorant-api.com"]
+      ? ["'self'", "wss:", "https://valorant-api.com", "https://cdn.socket.io"]
       : ["'self'", "ws:", "wss:", "http:", "https:"],
     formAction: ["'self'"],
     upgradeInsecureRequests: isProd ? [] : null,
