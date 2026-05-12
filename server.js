@@ -609,7 +609,8 @@ async function main() {
     );
   }
 
-  function postDiscordWebhook(webhookUrl, payload) {
+  function postDiscordWebhook(webhookUrl, payload, attempt) {
+    const n = Number(attempt) || 0;
     return new Promise((resolve) => {
       try {
         const u = new URL(webhookUrl);
@@ -627,6 +628,7 @@ async function main() {
               "Content-Type": "application/json",
               "Content-Length": Buffer.byteLength(body),
               "User-Agent": "DRAFTIX-Feedback/1.1",
+              Connection: "close",
             },
             timeout: 12000,
           },
@@ -635,9 +637,18 @@ async function main() {
             up.on("data", (c) => chunks.push(c));
             up.on("end", () => {
               const code = up.statusCode || 0;
+              const snippet = Buffer.concat(chunks).toString("utf8").slice(0, 800);
+              if (code === 429 && n < 1) {
+                const sec = parseFloat(up.headers["retry-after"]);
+                const ms = Math.min(8000, Math.max(800, (Number.isFinite(sec) ? sec : 2) * 1000));
+                console.warn("Feedback: Discord webhook 429 — retrying once after", ms, "ms");
+                setTimeout(() => {
+                  postDiscordWebhook(webhookUrl, payload, n + 1).then(resolve);
+                }, ms);
+                return;
+              }
               const ok = code >= 200 && code < 300;
               if (!ok) {
-                const snippet = Buffer.concat(chunks).toString("utf8").slice(0, 800);
                 console.warn("Feedback: Discord webhook HTTP", code, snippet || "(empty body)");
               }
               resolve(ok);
@@ -663,7 +674,10 @@ async function main() {
   }
 
   app.post("/api/feedback", feedbackLimiter, async (req, res) => {
-    if (req.body && String(req.body.website || "").trim()) {
+    // Honeypot: never use name "website" — browsers autofill it and block real users on 2nd submit.
+    const hpFilled =
+      String(req.body.dx_hp || "").trim() || String(req.body.website || "").trim();
+    if (hpFilled) {
       return res.status(400).json({ ok: false, error: "Invalid request" });
     }
     const kindRaw = clean(req.body && req.body.kind, 16).toLowerCase() || "feedback";

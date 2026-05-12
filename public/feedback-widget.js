@@ -1,6 +1,6 @@
 /**
  * Feedback / report modal — shared by landing (/) and draft app (/app).
- * POST /api/feedback  { kind, message, contact?, page?, website? (honeypot) }
+ * POST /api/feedback  { kind, message, contact?, page?, dx_hp? (honeypot) }
  */
 (function () {
   function ensureModal() {
@@ -18,8 +18,8 @@
       '<h2 id="feedbackModalTitle" class="modal-title">Feedback or report</h2>' +
       '<p class="modal-subtitle">Bug reports and ideas go straight to the maintainer. No account required.</p>' +
       "</div>" +
-      '<form id="feedbackForm" class="feedback-form" novalidate>' +
-      '<label class="feedback-hp" aria-hidden="true">Leave blank<input type="text" name="website" tabindex="-1" autocomplete="off" /></label>' +
+      '<form id="feedbackForm" class="feedback-form" novalidate autocomplete="off">' +
+      '<label class="feedback-hp" aria-hidden="true">Leave blank<input type="text" name="dx_hp" id="fbDxHp" tabindex="-1" autocomplete="off" /></label>' +
       '<label class="feedback-field">Type<select id="fbKind" name="kind">' +
       '<option value="feedback">General feedback</option>' +
       '<option value="bug">Bug / something broke</option>' +
@@ -47,6 +47,8 @@
     err.hidden = true;
     ok.hidden = true;
     form.reset();
+    const hpIn = document.getElementById("fbDxHp");
+    if (hpIn) hpIn.value = "";
     modal.hidden = false;
     modal.setAttribute("aria-hidden", "false");
     document.body.classList.add("modal-open");
@@ -82,7 +84,7 @@
     const btn = document.getElementById("fbSubmit");
     if (err) err.hidden = true;
     if (ok) ok.hidden = true;
-    const hp = form.querySelector('input[name="website"]');
+    const hp = form.querySelector('input[name="dx_hp"]');
     const kind = (document.getElementById("fbKind") && document.getElementById("fbKind").value) || "feedback";
     const message = (document.getElementById("fbMsg") && document.getElementById("fbMsg").value) || "";
     const contact = (document.getElementById("fbContact") && document.getElementById("fbContact").value) || "";
@@ -101,7 +103,7 @@
           message: message.trim(),
           contact: contact.trim(),
           page,
-          website: hp ? hp.value : "",
+          dx_hp: hp ? hp.value : "",
         }),
       });
       let payload = {};
