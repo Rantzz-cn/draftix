@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Allow: /index.html
+
+# The app shell is a session-only page — no content for crawlers.
+Disallow: /app.html
+Disallow: /img
+Disallow: /healthz
+Disallow: /status.html
+
+# Allow major social/preview crawlers to fetch the landing for link cards.
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+Sitemap: https://draftix.tech/sitemap.xml

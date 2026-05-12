@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#FF4655" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="DRAFTIX live server status — uptime, active sessions, and catalog health." />
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="canonical" href="https://draftix.tech/status.html" />
+    <link rel="icon" href="images/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="96x96" href="images/favicon-96x96.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>Status — DRAFTIX</title>
+    <!-- Self-contained: no external stylesheet, no font CDN, no third-party
+         scripts. Pulls /healthz JSON every 5s and renders it as cards. -->
+    <style>
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; padding: 0;
+        background: #060912;
+        color: #e7eefb;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        line-height: 1.55;
+      }
+      body {
+        background:
+          radial-gradient(80% 60% at 80% 10%, rgba(255, 70, 85, 0.10), transparent 60%),
+          radial-gradient(70% 50% at 10% 90%, rgba(74, 141, 255, 0.08), transparent 60%),
+          linear-gradient(180deg, #060912 0%, #0a1020 100%);
+        min-height: 100vh;
+      }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 40px 24px 64px; }
+      header.bar {
+        display: flex; justify-content: space-between; align-items: center;
+        gap: 16px; padding-bottom: 24px; margin-bottom: 32px;
+        border-bottom: 1px solid #1f2c45;
+      }
+      .brand { color: #fff; text-decoration: none; font-size: 28px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
+      .brand span { color: #ff4655; }
+      .back { color: #7e90b2; text-decoration: none; font-size: 14px; }
+      .back:hover { color: #fff; }
+
+      h1 {
+        color: #fff; font-size: 36px; margin: 0 0 6px;
+        letter-spacing: 1px; text-transform: uppercase;
+        display: flex; align-items: center; gap: 14px;
+      }
+      .sub { color: #7e90b2; font-size: 14px; margin: 0 0 32px; }
+
+      .pulse {
+        display: inline-grid; place-items: center;
+        width: 14px; height: 14px; border-radius: 50%;
+        position: relative;
+      }
+      .pulse::before {
+        content: ''; position: absolute; inset: 0; border-radius: 50%;
+        background: currentColor;
+      }
+      .pulse::after {
+        content: ''; position: absolute; inset: -6px; border-radius: 50%;
+        background: currentColor; opacity: 0.4;
+        animation: pulse 1.8s ease-out infinite;
+      }
+      .pulse.online  { color: #4ade80; }
+      .pulse.offline { color: #ff4655; }
+      @keyframes pulse {
+        0%   { transform: scale(0.7); opacity: 0.4; }
+        100% { transform: scale(2.2); opacity: 0; }
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+      .card {
+        background: linear-gradient(180deg, rgba(14, 22, 38, 0.85) 0%, rgba(11, 17, 32, 0.85) 100%);
+        border: 1px solid #1f2c45;
+        border-radius: 10px;
+        padding: 20px 22px;
+        position: relative;
+        overflow: hidden;
+      }
+      .card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #ff4655 0%, transparent 80%);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .card:hover::before { opacity: 1; }
+      .card-label {
+        color: #7e90b2; font-size: 11px;
+        letter-spacing: 2px; text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+      .card-value {
+        color: #fff; font-size: 34px;
+        font-weight: 800; letter-spacing: 0.5px;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+      }
+      .card-value.small { font-size: 20px; }
+      .card-sub {
+        color: #7e90b2; font-size: 13px; margin-top: 6px;
+      }
+
+      .meta {
+        display: flex; flex-wrap: wrap; gap: 18px;
+        color: #7e90b2; font-size: 13px;
+        padding-top: 24px; border-top: 1px solid #1f2c45;
+      }
+      .meta a { color: #7e90b2; text-decoration: none; border-bottom: 1px dotted #475873; }
+      .meta a:hover { color: #ff4655; border-bottom-color: #ff4655; }
+      .meta code {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid #1f2c45;
+        padding: 1px 6px; border-radius: 3px;
+        font-family: 'Share Tech Mono', Consolas, monospace;
+        font-size: 12px;
+        color: #e7eefb;
+      }
+
+      .error {
+        background: rgba(255, 70, 85, 0.08);
+        border: 1px solid rgba(255, 70, 85, 0.4);
+        color: #ff6a78;
+        padding: 16px 20px; border-radius: 8px;
+        margin-bottom: 24px;
+      }
+
+      footer.foot {
+        margin-top: 40px; padding-top: 24px;
+        border-top: 1px solid #1f2c45;
+        color: #7e90b2; font-size: 14px;
+        display: flex; gap: 12px; flex-wrap: wrap;
+      }
+      footer.foot a { color: #7e90b2; text-decoration: none; }
+      footer.foot a:hover { color: #ff4655; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="bar">
+        <a href="/" class="brand" aria-label="DRAFTIX home">DRAFT<span>IX</span></a>
+        <a href="/" class="back">← Back to home</a>
+      </header>
+
+      <h1>
+        <span class="pulse online" id="pulse" aria-hidden="true"></span>
+        <span id="title">Server status</span>
+      </h1>
+      <p class="sub" id="subtitle">Live metrics, refreshed automatically every 5 seconds.</p>
+
+      <div id="errorBox" class="error" hidden></div>
+
+      <section class="grid" id="cards">
+        <div class="card">
+          <div class="card-label">Status</div>
+          <div class="card-value small" id="kStatus">Loading…</div>
+          <div class="card-sub" id="kStatusSub">Reaching server…</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Version</div>
+          <div class="card-value small" id="kVersion">—</div>
+          <div class="card-sub">Build identifier</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Uptime</div>
+          <div class="card-value" id="kUptime">—</div>
+          <div class="card-sub" id="kUptimeSub">Since last restart</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Active sessions</div>
+          <div class="card-value" id="kSessions">—</div>
+          <div class="card-sub">Drafts in flight right now</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Codes issued</div>
+          <div class="card-value" id="kCodes">—</div>
+          <div class="card-sub">Unique codes ever generated</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Catalog</div>
+          <div class="card-value small" id="kCatalog">—</div>
+          <div class="card-sub">Maps & agents from Valorant-API</div>
+        </div>
+      </section>
+
+      <div class="meta">
+        <span>Last update: <span id="lastUpdate">—</span></span>
+        <span>·</span>
+        <span>Raw endpoint: <a href="/healthz" target="_blank" rel="noopener">/healthz</a></span>
+        <span>·</span>
+        <span>Turn timer: <code id="kTurn">—</code></span>
+      </div>
+
+      <footer class="foot">
+        <a href="/">← Back to home</a>
+        <span>·</span>
+        <a href="/privacy.html">Privacy</a>
+        <span>·</span>
+        <a href="/terms.html">Terms</a>
+      </footer>
+    </div>
+
+    <script>
+      (function () {
+        var $ = function (id) { return document.getElementById(id); };
+
+        function fmtUptime(sec) {
+          sec = Math.max(0, Math.floor(Number(sec) || 0));
+          var d = Math.floor(sec / 86400); sec -= d * 86400;
+          var h = Math.floor(sec / 3600);  sec -= h * 3600;
+          var m = Math.floor(sec / 60);    sec -= m * 60;
+          if (d) return d + 'd ' + h + 'h ' + m + 'm';
+          if (h) return h + 'h ' + m + 'm';
+          if (m) return m + 'm ' + sec + 's';
+          return sec + 's';
+        }
+        function fmtNumber(n) {
+          n = Number(n);
+          if (!isFinite(n)) return '—';
+          return n.toLocaleString('en-US');
+        }
+        function fmtTime(ms) {
+          ms = Number(ms);
+          if (!isFinite(ms)) return '—';
+          var s = Math.round(ms / 1000);
+          return s + 's';
+        }
+        function fmtClock(d) {
+          d = d || new Date();
+          var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+          return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+        }
+
+        var failures = 0;
+
+        function setOffline(msg) {
+          $('pulse').className = 'pulse offline';
+          $('title').textContent = 'Server unreachable';
+          $('kStatus').textContent = 'OFFLINE';
+          $('kStatus').style.color = '#ff6a78';
+          $('kStatusSub').textContent = msg || 'No response from /healthz';
+          var eb = $('errorBox');
+          eb.hidden = false;
+          eb.textContent = msg || 'Cannot reach /healthz. The server may be restarting.';
+        }
+
+        function applyData(data) {
+          $('errorBox').hidden = true;
+          $('pulse').className = 'pulse online';
+          $('title').textContent = 'All systems operational';
+          $('kStatus').textContent = data.ok ? 'ONLINE' : 'DEGRADED';
+          $('kStatus').style.color = data.ok ? '#4ade80' : '#facc15';
+          $('kStatusSub').textContent = data.ok ? 'Accepting traffic' : 'Server responded but reported issues';
+          $('kVersion').textContent = data.version ? 'v' + data.version : '—';
+          $('kUptime').textContent = fmtUptime(data.uptimeSec);
+          $('kSessions').textContent = fmtNumber(data.sessions);
+          $('kCodes').textContent = fmtNumber(data.codesIssued);
+          var cat = data.catalog || {};
+          $('kCatalog').textContent = (cat.maps || 0) + ' maps · ' + (cat.agents || 0) + ' agents';
+          $('kTurn').textContent = fmtTime(data.turnTimeoutMs) + ' per ban';
+          $('lastUpdate').textContent = fmtClock();
+        }
+
+        function tick() {
+          fetch('/healthz', { cache: 'no-store' })
+            .then(function (r) {
+              if (!r.ok) throw new Error('HTTP ' + r.status);
+              return r.json();
+            })
+            .then(function (data) {
+              failures = 0;
+              applyData(data);
+            })
+            .catch(function (e) {
+              failures++;
+              // First failure: show "offline" state. Subsequent failures
+              // just keep the offline pulse — no log spam.
+              if (failures <= 1) setOffline(e.message);
+            });
+        }
+
+        tick();
+        setInterval(tick, 5000);
+      })();
+    </script>
+  </body>
+</html>

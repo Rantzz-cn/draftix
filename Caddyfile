@@ -1,0 +1,35 @@
+# Caddyfile — DRAFTIX
+#
+# Caddy gives us:
+#   • Automatic HTTPS via Let's Encrypt (no certbot, no cron).
+#   • HTTP/2 + HTTP/3 by default.
+#   • Forward-secrecy ciphers, modern TLS defaults.
+#   • WebSocket-aware reverse proxy (Socket.io works out of the box).
+#
+# Replace draftix.tech below if you ever change the domain.
+
+draftix.tech, www.draftix.tech {
+    encode gzip zstd
+
+    # Forward everything to the Node container on the internal docker network.
+    # Caddy automatically upgrades the connection for Socket.io (WebSocket).
+    reverse_proxy draftix:3000 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Edge-level rate limit on the image proxy as defense-in-depth
+    # (the app already throttles, this just bounces clearly abusive traffic
+    # before it ever touches Node).
+    @img path /img*
+    handle @img {
+        reverse_proxy draftix:3000
+    }
+
+    # Sensible logging — JSON to stdout so `docker logs caddy` is structured.
+    log {
+        output stdout
+        format json
+    }
+}

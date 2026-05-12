@@ -1,0 +1,26 @@
+{
+  "name": "DRAFTIX — Valorant Draft Tool",
+  "short_name": "DRAFTIX",
+  "description": "Real-time Valorant map & agent ban tool. No signup. Just draft.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#060912",
+  "theme_color": "#FF4655",
+  "categories": ["games", "utilities"],
+  "icons": [
+    {
+      "src": "images/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

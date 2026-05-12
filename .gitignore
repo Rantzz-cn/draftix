@@ -1,0 +1,26 @@
+# Runtime / generated
+node_modules/
+data/
+*.log
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build / temp
+dist/
+build/
+.cache/
+*.tgz
+favicon.zip
+.favicon-extract/

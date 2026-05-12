@@ -1,0 +1,15 @@
+# Normalize line endings to LF in the repo regardless of the dev's OS.
+# Lets the Linux Docker image / VPS run scripts and Node files unchanged.
+* text=auto eol=lf
+
+# Binary files — never touch these.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.mp3 binary
+*.wav binary
+*.woff binary
+*.woff2 binary

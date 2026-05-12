@@ -1,0 +1,61 @@
+# docker-compose.yml — DRAFTIX production stack
+#
+# Two containers:
+#   • draftix : the Node.js app on internal port 3000 (not exposed publicly).
+#   • caddy   : reverse proxy + automatic HTTPS (Let's Encrypt).
+#
+# How to deploy:
+#   1. Point draftix.tech A-record to this VPS's public IPv4.
+#   2. cp .env.example .env  ← then edit ALLOWED_ORIGINS to your domain.
+#   3. docker compose up -d
+#   4. Caddy obtains a TLS cert on first request and renews automatically.
+
+services:
+  draftix:
+    build: .
+    image: draftix:latest
+    container_name: draftix
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      # Tighten origins for production. Caddy proxies from the same host so
+      # the request Origin will be your public domain.
+      ALLOWED_ORIGINS: "https://draftix.tech,https://www.draftix.tech"
+      # Trust the immediate proxy (Caddy) so req.ip is the real client IP and
+      # rate-limiting / logging work correctly.
+      TRUST_PROXY: "1"
+      APP_VERSION: "1.0.0"
+      # Optional overrides — see .env.example for full list.
+    volumes:
+      # Persist the unique-session-code log across restarts/rebuilds.
+      - draftix_data:/app/data
+    expose:
+      - "3000"
+    networks:
+      - draftix_net
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: draftix_caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data         # ACME certificates + state
+      - caddy_config:/config
+    depends_on:
+      - draftix
+    networks:
+      - draftix_net
+
+volumes:
+  draftix_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  draftix_net:
+    driver: bridge

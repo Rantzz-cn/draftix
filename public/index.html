@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#FF4655" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="DRAFTIX — real-time Valorant draft platform. Map veto, agent bans, captain seats. No signup, no install, free forever." />
+    <meta name="keywords" content="Valorant, draft, map veto, agent ban, esports, scrim, tournament, no signup" />
+    <meta name="author" content="DRAFTIX" />
+    <meta name="robots" content="index,follow" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DRAFTIX" />
+    <meta property="og:url" content="https://draftix.tech/" />
+    <meta property="og:title" content="DRAFTIX — Pick. Ban. Win." />
+    <meta property="og:description" content="Real-time Valorant draft tool. Map veto, agent bans, team captains. No signup required." />
+    <meta property="og:image" content="https://draftix.tech/images/og-1200x630.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="DRAFTIX — Pick · Ban · Win. Real-time Valorant draft tool." />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@draftix" />
+    <meta name="twitter:title" content="DRAFTIX — Pick. Ban. Win." />
+    <meta name="twitter:description" content="Real-time Valorant draft tool. No signup required." />
+    <meta name="twitter:image" content="https://draftix.tech/images/og-1200x630.jpg" />
+    <meta name="twitter:image:alt" content="DRAFTIX — Pick · Ban · Win." />
+
+    <link rel="canonical" href="https://draftix.tech/" />
+
+    <link rel="icon" href="images/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="96x96" href="images/favicon-96x96.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <title>DRAFTIX — Pick. Ban. Win.</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="page-landing">
+    <!-- ─── Landing ───────────────────────────────────── -->
+    <section id="landing" class="landing">
+      <!-- ░ Animated backdrop ░ -->
+      <div class="landing-bg" aria-hidden="true">
+        <div class="bg-grid"></div>
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-noise"></div>
+      </div>
+
+      <!-- ░ Top nav ░ -->
+      <nav class="landing-nav">
+        <a href="#top" class="brand brand-sm">
+          <img class="brand-mark" src="images/draftix.png" alt="DRAFTIX" />
+          <span class="brand-name">DRAFT<span>IX</span></span>
+        </a>
+        <ul class="landing-nav-links">
+          <li><span class="nosignup-badge" title="No signup, no install — just open and play">No signup</span></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#pool">Map pool</a></li>
+          <li><a href="/app.html" class="nav-cta">Open app</a></li>
+        </ul>
+      </nav>
+
+      <!-- ░ Hero ░ -->
+      <header id="top" class="landing-hero">
+        <div class="hero-copy reveal" data-reveal="up">
+          <span class="hero-eyebrow">Valorant Draft Platform</span>
+          <div class="brand brand-xl hero-brand">
+            <img class="brand-mark" src="images/draftix.png" alt="" />
+            <div class="brand-text">
+              <h1 class="brand-name hero-headline">DRAFT<span>IX</span></h1>
+              <p class="brand-tag">Pick. Ban. Win.</p>
+            </div>
+          </div>
+          <p class="hero-blurb">
+            A real-time map veto + agent ban tool built for competitive Valorant teams.
+            Fair turn order, captain seats, instant sync — <strong>no signup, no install, free forever.</strong>
+          </p>
+          <div class="hero-actions">
+            <a href="/app.html" class="primary big">▶ Start a draft</a>
+            <a href="#how" class="ghost big">How it works</a>
+          </div>
+          <ul class="hero-stats">
+            <li><strong>0</strong><span>Accounts needed</span></li>
+            <li><strong>11</strong><span>Competitive maps</span></li>
+            <li><strong>29</strong><span>Playable agents</span></li>
+            <li><strong>&lt;100ms</strong><span>Sync latency</span></li>
+          </ul>
+        </div>
+
+        <!-- ░ Mock preview window ░ -->
+        <div class="hero-preview reveal" data-reveal="up" data-reveal-delay="150">
+          <div class="preview-window">
+            <div class="preview-titlebar">
+              <span class="preview-dot dot-r"></span>
+              <span class="preview-dot dot-y"></span>
+              <span class="preview-dot dot-g"></span>
+              <span class="preview-url">draftix.tech/app.html?code=AM26SN</span>
+            </div>
+            <div class="preview-body">
+              <div class="preview-phase">
+                <span class="preview-eyebrow">Map Ban Phase</span>
+                <span class="preview-round">Round 3 of 6 — Team A turn</span>
+              </div>
+              <div class="preview-grid">
+                <div class="preview-tile banned" style="--clr: var(--accent);"><span>Bind</span></div>
+                <div class="preview-tile banned" style="--clr: var(--team-b);"><span>Breeze</span></div>
+                <div class="preview-tile active"><span>Ascent</span></div>
+                <div class="preview-tile"><span>Haven</span></div>
+                <div class="preview-tile"><span>Split</span></div>
+                <div class="preview-tile"><span>Sunset</span></div>
+              </div>
+              <div class="preview-chips">
+                <span class="preview-chip a">A · banned</span>
+                <span class="preview-chip b">B · banned</span>
+                <span class="preview-chip a">A · turn</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ░ Features grid ░ -->
+      <section id="features" class="section">
+        <div class="section-head reveal" data-reveal="up">
+          <span class="section-eyebrow">Why DRAFTIX</span>
+          <h2 class="section-title">Built for the way teams actually scrim.</h2>
+        </div>
+        <ul class="feature-row feature-row-5">
+          <li class="feature reveal" data-reveal="up" data-reveal-delay="0">
+            <span class="feature-icon" aria-hidden="true">⚡</span>
+            <strong>Realtime</strong>
+            <span>WebSocket sync — every captain sees every action the instant it happens.</span>
+          </li>
+          <li class="feature reveal" data-reveal="up" data-reveal-delay="60">
+            <span class="feature-icon" aria-hidden="true">⛨</span>
+            <strong>Fair Play</strong>
+            <span>Enforced turn order. Only the active captain can ban. No accidents, no disputes.</span>
+          </li>
+          <li class="feature reveal" data-reveal="up" data-reveal-delay="120">
+            <span class="feature-icon" aria-hidden="true">◎</span>
+            <strong>Competitive</strong>
+            <span>Official map pool, six agent bans per side, decider map called automatically.</span>
+          </li>
+          <li class="feature feature-highlight reveal" data-reveal="up" data-reveal-delay="180">
+            <span class="feature-icon" aria-hidden="true">✓</span>
+            <strong>No signup</strong>
+            <span>No accounts, no email, no install. Open the URL, share the code, draft.</span>
+          </li>
+          <li class="feature reveal" data-reveal="up" data-reveal-delay="240">
+            <span class="feature-icon" aria-hidden="true">∞</span>
+            <strong>Free forever</strong>
+            <span>No paywalls, no ads, no upsells. Built for the community, not for monetization.</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ░ How it works ░ -->
+      <section id="how" class="section">
+        <div class="section-head reveal" data-reveal="up">
+          <span class="section-eyebrow">How it works</span>
+          <h2 class="section-title">From lobby to first round in under a minute.</h2>
+        </div>
+        <ol class="steps">
+          <li class="step reveal" data-reveal="up" data-reveal-delay="0">
+            <span class="step-no">01</span>
+            <h3>Open the app</h3>
+            <p>No account, no email — just visit <code>/app.html</code> and you're in.</p>
+          </li>
+          <li class="step reveal" data-reveal="up" data-reveal-delay="80">
+            <span class="step-no">02</span>
+            <h3>Create or join</h3>
+            <p>Host generates a 6-character code. Teammates paste it and they're connected instantly.</p>
+          </li>
+          <li class="step reveal" data-reveal="up" data-reveal-delay="160">
+            <span class="step-no">03</span>
+            <h3>Ban the map pool</h3>
+            <p>Captains alternate map bans until one remains — the decider.</p>
+          </li>
+          <li class="step reveal" data-reveal="up" data-reveal-delay="240">
+            <span class="step-no">04</span>
+            <h3>Ban agents · play</h3>
+            <p>Six agent bans (three per side) and you're locked in. Hit the lobby and play.</p>
+          </li>
+        </ol>
+      </section>
+
+      <!-- ░ Map pool ░ -->
+      <section id="pool" class="section">
+        <div class="section-head reveal" data-reveal="up">
+          <span class="section-eyebrow">Map pool</span>
+          <h2 class="section-title">The 11 maps that matter.</h2>
+          <p class="section-sub">Locked to the current competitive rotation. We update it when Riot does.</p>
+        </div>
+        <ul class="map-pool reveal" data-reveal="up">
+          <li>Ascent</li><li>Abyss</li><li>Bind</li><li>Breeze</li>
+          <li>Fracture</li><li>Haven</li><li>Icebox</li><li>Lotus</li>
+          <li>Pearl</li><li>Split</li><li>Sunset</li>
+        </ul>
+      </section>
+
+      <!-- ░ CTA banner ░ -->
+      <section id="start" class="cta-banner reveal" data-reveal="up">
+        <div class="cta-inner">
+          <span class="nosignup-pill cta-pill">No signup · No install · Free forever</span>
+          <h2 class="cta-title">Spin up a draft right now.</h2>
+          <p class="cta-sub">Open the app, share the code, ban your maps. Takes about 45 seconds.</p>
+          <div class="cta-actions">
+            <a href="/app.html" class="primary big">▶ Open the app</a>
+            <a href="#how" class="ghost big">Read how it works</a>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- ─── Footer ───────────────────────────────────── -->
+    <footer id="siteFooter" class="site-footer">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="brand brand-sm">
+            <img class="brand-mark" src="images/draftix.png" alt="" />
+            <span class="brand-name">DRAFT<span>IX</span></span>
+          </div>
+          <p class="footer-tag">Pick. Ban. Win.</p>
+          <p class="footer-blurb">Open, real-time map veto + agent ban tooling for Valorant teams.</p>
+          <span class="nosignup-pill footer-pill">No signup required</span>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="/app.html">Open app</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how">How it works</a></li>
+            <li><a href="#pool">Map pool</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Status</h4>
+          <ul>
+            <li><a href="/status.html">Server status</a></li>
+            <li><span class="footer-version">v<span id="footerVersion">1.0.0</span></span></li>
+          </ul>
+        </div>
+        <div class="footer-col footer-legal">
+          <h4>Legal</h4>
+          <ul class="footer-legal-links">
+            <li><a href="/privacy.html">Privacy Policy</a></li>
+            <li><a href="/terms.html">Terms of Service</a></li>
+          </ul>
+          <p class="footer-disclaimer">
+            DRAFTIX is not endorsed by Riot Games and does not reflect the views or opinions
+            of Riot Games or anyone officially involved in producing or managing
+            <em>VALORANT</em>. VALORANT and Riot Games are trademarks or registered
+            trademarks of Riot Games, Inc.
+          </p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="footerYear">2026</span> DRAFTIX</span>
+        <span class="footer-sep">·</span>
+        <a href="/privacy.html">Privacy</a>
+        <span class="footer-sep">·</span>
+        <a href="/terms.html">Terms</a>
+        <span class="footer-sep">·</span>
+        <span>Made for the community by Tradz</span>
+      </div>
+    </footer>
+
+    <!-- ─── Floating support / donation pill ─── -->
+    <a
+      class="kofi-fab"
+      href="https://ko-fi.com/dartzski"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Support DRAFTIX on Ko-fi"
+      title="Buy me a coffee"
+    >
+      <span class="kofi-fab-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 8h1a4 4 0 0 1 0 8h-1" />
+          <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z" />
+          <line x1="6"  y1="2" x2="6"  y2="4" />
+          <line x1="10" y1="2" x2="10" y2="4" />
+          <line x1="14" y1="2" x2="14" y2="4" />
+        </svg>
+      </span>
+      <span class="kofi-fab-text">Buy me a coffee</span>
+    </a>
+
+    <script src="landing.js"></script>
+  </body>
+</html>

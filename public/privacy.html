@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#FF4655" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="DRAFTIX privacy policy — what data we touch, what we don't, and how long it stays around." />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://draftix.tech/privacy.html" />
+    <link rel="icon" href="images/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="96x96" href="images/favicon-96x96.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>Privacy Policy — DRAFTIX</title>
+    <!-- INTENTIONALLY self-contained: no external stylesheet, no @import,
+         no font dependency. All styles live in this <style> block so the
+         page is guaranteed to render even with strict shields/blockers. -->
+    <style>
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; padding: 0;
+        background: #060912;
+        color: #e7eefb;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        line-height: 1.55;
+      }
+      .wrap { max-width: 880px; margin: 0 auto; padding: 40px 24px 64px; }
+      header.bar {
+        display: flex; justify-content: space-between; align-items: center;
+        gap: 16px; padding-bottom: 24px; margin-bottom: 40px;
+        border-bottom: 1px solid #1f2c45;
+      }
+      .brand { color: #fff; text-decoration: none; font-size: 28px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
+      .brand span { color: #ff4655; }
+      .back { color: #7e90b2; text-decoration: none; font-size: 14px; }
+      .back:hover { color: #fff; }
+      h1 { color: #fff; font-size: 42px; margin: 0 0 6px; letter-spacing: 1px; text-transform: uppercase; }
+      .updated { color: #7e90b2; font-style: italic; margin: 0 0 28px; font-size: 14px; }
+      h2 {
+        color: #ff4655; font-size: 20px; margin: 36px 0 10px;
+        letter-spacing: 1.5px; text-transform: uppercase;
+        border-left: 3px solid #ff4655; padding-left: 12px;
+      }
+      p, li { font-size: 16px; line-height: 1.7; color: #e7eefb; margin: 8px 0; }
+      ul { padding-left: 22px; margin: 8px 0 16px; }
+      li { margin-bottom: 6px; }
+      a { color: #ff4655; text-decoration: none; border-bottom: 1px dotted rgba(255,70,85,0.5); }
+      a:hover { color: #fff; border-bottom-color: #fff; }
+      strong { color: #fff; }
+      em { color: #7e90b2; font-style: italic; }
+      footer.foot {
+        margin-top: 48px; padding-top: 24px;
+        border-top: 1px solid #1f2c45;
+        color: #7e90b2; font-size: 14px;
+        display: flex; gap: 12px;
+      }
+      footer.foot a { color: #7e90b2; text-decoration: none; border: 0; }
+      footer.foot a:hover { color: #ff4655; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="bar">
+        <a href="/" class="brand" aria-label="DRAFTIX home">DRAFT<span>IX</span></a>
+        <a href="/" class="back">← Back to home</a>
+      </header>
+
+      <h1>Privacy Policy</h1>
+      <p class="updated">Last updated: May 12, 2026</p>
+
+      <p>
+        DRAFTIX is a free, no-signup tool for running Valorant draft sessions. This policy is
+        short on purpose — there isn't much going on. If anything below is unclear, message us
+        on Ko-fi.
+      </p>
+
+      <h2>What we collect</h2>
+      <ul>
+        <li><strong>Nicknames and chat messages</strong> you type during a session, kept in server memory only for the lifetime of that session.</li>
+        <li><strong>Connection metadata</strong> (IP address, user-agent) used solely for per-IP rate limiting and abuse defense. Not stored beyond what's needed in memory.</li>
+        <li><strong>Session codes</strong>, kept in a local log file so we can guarantee each code is permanently unique. The log does <em>not</em> contain nicknames, chat, picks, or IPs.</li>
+      </ul>
+
+      <h2>What we don't collect</h2>
+      <ul>
+        <li>No accounts, no passwords, no email addresses.</li>
+        <li>No analytics scripts, no third-party trackers, no ad networks.</li>
+        <li>No cookies are set by DRAFTIX itself.</li>
+        <li>No persistent record of who played whom, on what map, or with what picks.</li>
+      </ul>
+
+      <h2>How long data lives</h2>
+      <ul>
+        <li><strong>Sessions and chat</strong> live only in server memory. When the host leaves, the session is closed and all messages are dropped immediately. Idle sessions are also automatically swept after 2 hours of inactivity.</li>
+        <li><strong>Session codes</strong> persist on disk indefinitely to keep them unique. They are not personally identifiable.</li>
+      </ul>
+
+      <h2>Third-party services</h2>
+      <ul>
+        <li><strong>Riot's Valorant-API</strong> (valorant-api.com) is queried server-side for map and agent metadata. Your browser never talks to Riot directly.</li>
+        <li><strong>Google Fonts</strong> is used on the main app to load typography. Your browser fetches font files from Google's CDN; that request is governed by <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google's privacy policy</a>.</li>
+        <li><strong>Ko-fi</strong> is linked in the footer for donations. If you click through and donate, that interaction is governed by <a href="https://ko-fi.com/manage/privacy" target="_blank" rel="noopener noreferrer">Ko-fi's privacy policy</a>.</li>
+      </ul>
+
+      <h2>Children</h2>
+      <p>
+        DRAFTIX has no age gate. We don't knowingly collect data from anyone, and we don't
+        require any data to use the tool. Use of DRAFTIX is governed by your local laws.
+      </p>
+
+      <h2>Changes to this policy</h2>
+      <p>
+        If we change anything material, the "Last updated" date above will move. There's no
+        mailing list to notify because we don't have your email.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions or concerns? Reach out via
+        <a href="https://ko-fi.com/dartzski" target="_blank" rel="noopener noreferrer">Ko-fi</a>.
+      </p>
+
+      <footer class="foot">
+        <a href="/">← Back to home</a>
+        <span>·</span>
+        <a href="/terms.html">Terms of Service</a>
+      </footer>
+    </div>
+  </body>
+</html>

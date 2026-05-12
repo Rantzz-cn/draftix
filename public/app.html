@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#FF4655" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="DRAFTIX draft session — real-time Valorant map veto + agent bans. No signup." />
+    <meta name="robots" content="noindex,nofollow" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DRAFTIX" />
+    <meta property="og:url" content="https://draftix.tech/app.html" />
+    <meta property="og:title" content="DRAFTIX — Draft Session" />
+    <meta property="og:description" content="Join a real-time Valorant draft session. No signup required." />
+    <meta property="og:image" content="https://draftix.tech/images/og-1200x630.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="DRAFTIX — Pick · Ban · Win. Real-time Valorant draft tool." />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@draftix" />
+    <meta name="twitter:title" content="DRAFTIX — Draft Session" />
+    <meta name="twitter:description" content="Join a real-time Valorant draft session. No signup required." />
+    <meta name="twitter:image" content="https://draftix.tech/images/og-1200x630.jpg" />
+    <meta name="twitter:image:alt" content="DRAFTIX — Pick · Ban · Win." />
+
+    <link rel="icon" href="images/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="96x96" href="images/favicon-96x96.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <title>DRAFTIX — Draft Session</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="page-app">
+    <!-- ─── Gate (visible when not in a session) ─── -->
+    <section id="landing" class="app-gate">
+      <div class="app-gate-bg" aria-hidden="true">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+      </div>
+
+      <nav class="landing-nav">
+        <a href="/" class="brand brand-sm">
+          <img class="brand-mark" src="images/draftix.png" alt="DRAFTIX" />
+          <span class="brand-name">DRAFT<span>IX</span></span>
+        </a>
+        <ul class="landing-nav-links">
+          <li><span class="nosignup-badge" title="No signup, no install">No signup</span></li>
+          <li><a href="/#features">Features</a></li>
+          <li><a href="/#how">How it works</a></li>
+          <li><a href="/">Home</a></li>
+        </ul>
+      </nav>
+
+      <div class="app-gate-inner">
+        <header class="gate-hero">
+          <span class="hero-eyebrow">Draft Session</span>
+          <h1 class="gate-title">Start or join a draft.</h1>
+          <p class="gate-sub">Generate a session code or paste one a teammate shared. <strong>No signup, no install.</strong></p>
+        </header>
+
+        <section id="gate" class="gate-card">
+          <div class="gate-grid">
+            <div>
+              <label for="nickname">Callsign</label>
+              <input id="nickname" type="text" maxlength="24" placeholder="Your name" autocomplete="username" />
+            </div>
+            <div class="gate-actions">
+              <button type="button" id="btnCreate" class="primary">Create session</button>
+            </div>
+          </div>
+
+          <div class="divider">or join existing</div>
+
+          <div class="gate-grid">
+            <div>
+              <label for="joinCode">Session code</label>
+              <input id="joinCode" type="text" maxlength="8" placeholder="ABC12X" autocomplete="off" />
+            </div>
+            <div class="gate-actions">
+              <button type="button" id="btnJoin" class="secondary">Join session</button>
+            </div>
+          </div>
+
+          <p id="gateError" class="error" hidden></p>
+        </section>
+      </div>
+    </section>
+
+    <!-- ─── App shell (visible in a session) ─────────── -->
+    <section id="app" class="app-shell" hidden>
+      <header class="appbar">
+        <a href="/" class="brand brand-sm" title="Back to home">
+          <img class="brand-mark" src="images/draftix.png" alt="DRAFTIX" />
+          <span class="brand-name">DRAFT<span>IX</span></span>
+        </a>
+
+        <div class="phase-display">
+          <div class="phase-title" id="phaseTitle">Lobby</div>
+          <div class="phase-round" id="phaseRound"></div>
+          <div class="turn-banner" id="turnBanner"></div>
+          <div class="turn-timer" id="turnTimer" hidden aria-live="polite" aria-label="Turn timer">
+            <span class="turn-timer-label">Time left</span>
+            <span class="turn-timer-value" id="turnTimerValue">00:30</span>
+          </div>
+        </div>
+
+        <div class="appbar-actions">
+          <span id="connStatus" class="conn-status conn-online" role="status" aria-live="polite" title="Connected">
+            <span class="conn-dot" aria-hidden="true"></span>
+            <span class="conn-label">Online</span>
+          </span>
+          <button
+            type="button"
+            id="btnSoundToggle"
+            class="ghost icon-btn"
+            title="Toggle sound"
+            aria-label="Toggle sound"
+            aria-pressed="true"
+          >
+            <span class="sound-on" aria-hidden="true">🔊</span>
+            <span class="sound-off" aria-hidden="true" hidden>🔇</span>
+          </button>
+          <button type="button" id="btnLeave" class="ghost">Leave session</button>
+        </div>
+      </header>
+
+      <!-- Broadcast banner: server shutdowns, reconnects, idle reasons -->
+      <div id="serverBanner" class="server-banner" hidden role="alert"></div>
+
+      <div class="board">
+        <aside class="team-panel team-a" id="panelA">
+          <div class="team-head">
+            <span class="team-label" id="teamLabelA">Team A</span>
+            <span class="team-status" id="statusA">Lobby</span>
+          </div>
+          <div class="captain-card">
+            <div class="captain-avatar" aria-hidden="true">
+              <span id="avatarA">A</span>
+            </div>
+            <div class="captain-info">
+              <div class="captain-name" id="captainNameA">No captain</div>
+              <span class="captain-tag">Captain</span>
+            </div>
+          </div>
+          <ul class="roster" id="rosterA"></ul>
+          <div class="lobby-actions" id="lobbyActionsA" hidden>
+            <button type="button" id="btnCapA" class="team-btn team-btn-a">Claim Team A captain</button>
+            <button type="button" id="btnJoinA" class="team-btn-soft team-btn-a-soft">Join Team A</button>
+          </div>
+        </aside>
+
+        <main class="center">
+          <p id="roomError" class="error" hidden></p>
+
+          <!-- Host: name the teams before starting -->
+          <section id="teamNameEditor" class="team-name-editor" hidden>
+            <div class="team-name-head">Team names <span class="hint-inline">(host only · locks at start)</span></div>
+            <div class="team-name-grid">
+              <div>
+                <label for="tnA">Team A</label>
+                <input id="tnA" type="text" maxlength="24" placeholder="Team A" />
+              </div>
+              <div>
+                <label for="tnB">Team B</label>
+                <input id="tnB" type="text" maxlength="24" placeholder="Team B" />
+              </div>
+              <button type="button" id="btnSaveTeamNames" class="secondary">Save names</button>
+            </div>
+          </section>
+
+          <div id="hostStart" class="host-start" hidden>
+            <button type="button" id="btnStart" class="primary big">▶ Start draft</button>
+            <p class="hint">Both captains must be claimed before the draft starts.</p>
+          </div>
+
+          <div id="lobbyHint" class="lobby-hint" hidden>
+            <p>Share the session code so your teammates can join. Then claim a captain seat or join a team.</p>
+          </div>
+
+          <!-- Coin-flip animation (shown briefly when map_ban begins) -->
+          <div id="coinFlip" class="coin-flip" hidden aria-live="polite">
+            <div class="coin-eyebrow">Coin flip — first ban</div>
+            <div class="coin-stage">
+              <div class="coin" id="coinEl">
+                <span class="coin-face coin-a">A</span>
+                <span class="coin-face coin-b">B</span>
+              </div>
+            </div>
+            <div class="coin-result" id="coinResult">Flipping…</div>
+          </div>
+
+          <section id="mapsSection" class="ban-section" hidden>
+            <p id="mapsHelp" class="ban-help"></p>
+            <div id="mapGrid" class="grid maps"></div>
+            <p class="caption">Click on a map to ban it from the pool</p>
+          </section>
+
+          <!-- Side pick on the decider map -->
+          <section id="sidePickSection" class="ban-section side-pick" hidden>
+            <p id="sidePickHelp" class="ban-help"></p>
+            <div class="side-cards">
+              <button type="button" id="btnSideAttack" class="side-card side-attack" data-side="attack">
+                <span class="side-icon" aria-hidden="true">⚔</span>
+                <strong>Attack</strong>
+                <span>Start on offense — plant the spike.</span>
+              </button>
+              <button type="button" id="btnSideDefense" class="side-card side-defense" data-side="defense">
+                <span class="side-icon" aria-hidden="true">⛨</span>
+                <strong>Defense</strong>
+                <span>Start on defense — hold the sites.</span>
+              </button>
+            </div>
+            <p class="caption" id="sidePickCaption"></p>
+          </section>
+
+          <section id="agentsSection" class="ban-section" hidden>
+            <p id="agentsHelp" class="ban-help"></p>
+            <div id="agentGrid" class="grid agents"></div>
+            <p class="caption">Click on an agent to ban</p>
+          </section>
+
+          <div id="roundChips" class="round-chips" hidden></div>
+
+          <div class="session-strip">
+            <div class="session-code-block">
+              <span class="strip-label">Session code</span>
+              <strong id="roomCode" class="code"></strong>
+            </div>
+            <button type="button" id="btnCopy" class="ghost">Copy link</button>
+            <span id="roleBadge" class="badge"></span>
+            <div id="statusLine" class="status-pill"></div>
+          </div>
+        </main>
+
+        <aside class="team-panel team-b" id="panelB">
+          <div class="team-head">
+            <span class="team-label" id="teamLabelB">Team B</span>
+            <span class="team-status" id="statusB">Lobby</span>
+          </div>
+          <div class="captain-card">
+            <div class="captain-avatar" aria-hidden="true">
+              <span id="avatarB">B</span>
+            </div>
+            <div class="captain-info">
+              <div class="captain-name" id="captainNameB">No captain</div>
+              <span class="captain-tag">Captain</span>
+            </div>
+          </div>
+          <ul class="roster" id="rosterB"></ul>
+          <div class="lobby-actions" id="lobbyActionsB" hidden>
+            <button type="button" id="btnCapB" class="team-btn team-btn-b">Claim Team B captain</button>
+            <button type="button" id="btnJoinB" class="team-btn-soft team-btn-b-soft">Join Team B</button>
+          </div>
+
+          <div class="history">
+            <div class="history-head">Draft history</div>
+            <ul id="historyList" class="history-list"><li class="muted">No actions yet.</li></ul>
+          </div>
+        </aside>
+      </div>
+
+      <!-- ─── In-session chat dock (collapsible) ─── -->
+      <aside id="chatDock" class="chat-dock collapsed" aria-label="Session chat">
+        <button type="button" id="chatToggle" class="chat-toggle" aria-expanded="false" aria-controls="chatBody">
+          <span class="chat-toggle-icon" aria-hidden="true">💬</span>
+          <span class="chat-toggle-label">Chat</span>
+          <span class="chat-unread" id="chatUnread" hidden>0</span>
+          <span class="chat-toggle-caret" aria-hidden="true">▾</span>
+        </button>
+        <div id="chatBody" class="chat-body" hidden>
+          <div id="chatLog" class="chat-log" role="log" aria-live="polite" aria-relevant="additions">
+            <p class="chat-empty">Say hi to your teammates — messages stay in this session only.</p>
+          </div>
+          <form id="chatForm" class="chat-form" autocomplete="off">
+            <input id="chatInput" class="chat-input" type="text" maxlength="240" placeholder="Type a message…" aria-label="Chat message" />
+            <button type="submit" id="chatSend" class="chat-send" aria-label="Send">Send</button>
+          </form>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ─── Footer (compact on app page) ─── -->
+    <footer id="siteFooter" class="site-footer site-footer-mini">
+      <div class="footer-bottom">
+        <a href="/" class="footer-home">← Back to home</a>
+        <span class="footer-sep">·</span>
+        <span class="nosignup-pill">No signup required</span>
+        <span class="footer-sep">·</span>
+        <a href="/privacy.html">Privacy</a>
+        <span class="footer-sep">·</span>
+        <a href="/terms.html">Terms</a>
+        <span class="footer-sep">·</span>
+        <a href="/status.html">Status</a>
+        <span class="footer-sep">·</span>
+        <span class="footer-version">v<span id="footerVersion">1.0.0</span></span>
+        <span class="footer-sep">·</span>
+        <span>© <span id="footerYear">2026</span> DRAFTIX</span>
+      </div>
+      <p class="footer-disclaimer footer-mini-disclaimer">
+        Not endorsed by Riot Games. VALORANT and Riot Games are trademarks of Riot Games, Inc.
+      </p>
+    </footer>
+
+    <!-- ─── Draft Complete modal ─── -->
+    <div id="completeModal" class="modal" hidden aria-hidden="true" role="dialog" aria-labelledby="completeModalTitle">
+      <div class="modal-overlay" data-modal-dismiss></div>
+      <div class="modal-card" role="document">
+        <button type="button" class="modal-close" id="modalClose" aria-label="Close">×</button>
+
+        <div class="modal-header">
+          <span class="modal-eyebrow">Result</span>
+          <h2 id="completeModalTitle" class="modal-title">Draft Complete</h2>
+          <p class="modal-subtitle" id="modalSubtitle">Ready to play.</p>
+        </div>
+
+        <div class="modal-map" id="modalMap"></div>
+
+        <div class="modal-section">
+          <div class="modal-section-head">Banned agents</div>
+          <ul class="modal-agent-list" id="modalAgents"></ul>
+        </div>
+
+        <div class="modal-teams">
+          <div class="modal-team team-a">
+            <span class="modal-team-label">Team A captain</span>
+            <strong id="modalCapA">—</strong>
+          </div>
+          <div class="modal-vs">VS</div>
+          <div class="modal-team team-b">
+            <span class="modal-team-label">Team B captain</span>
+            <strong id="modalCapB">—</strong>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="modalDownloadBtn" class="secondary">Download image</button>
+          <button type="button" id="modalCopyBtn" class="secondary">Copy result</button>
+          <button type="button" id="modalDoneBtn" class="primary">Got it</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Floating support / donation pill ─── -->
+    <a
+      class="kofi-fab"
+      href="https://ko-fi.com/dartzski"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Support DRAFTIX on Ko-fi"
+      title="Buy me a coffee"
+    >
+      <span class="kofi-fab-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 8h1a4 4 0 0 1 0 8h-1" />
+          <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z" />
+          <line x1="6"  y1="2" x2="6"  y2="4" />
+          <line x1="10" y1="2" x2="10" y2="4" />
+          <line x1="14" y1="2" x2="14" y2="4" />
+        </svg>
+      </span>
+      <span class="kofi-fab-text">Buy me a coffee</span>
+    </a>
+
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
