@@ -77,7 +77,7 @@ Optional **[render.yaml](render.yaml)** — Render Blueprint for one-click infra
 ├── server.js               # Express + Socket.io entry point
 ├── public/                 # static assets served as-is
 │   ├── index.html          # marketing landing page
-│   ├── app.html            # the draft app
+│   ├── app.html            # draft app markup (URL: /app)
 │   ├── app.js              # all client-side draft logic
 │   ├── landing.js          # landing-page polish (scroll reveal, etc.)
 │   ├── styles.css          # everything visual

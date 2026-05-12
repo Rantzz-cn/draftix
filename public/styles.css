@@ -2509,7 +2509,7 @@ body.modal-open { overflow: hidden; }
 .cta-sub { color: var(--muted); font-size: 1.02rem; max-width: 480px; }
 .cta-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; margin-top: 0.5rem; }
 
-/* ─── App-page gate (when not in a session, on /app.html) ─── */
+/* ─── App-page gate (when not in a session, on /app) ─── */
 body.page-app {
   display: flex;
   flex-direction: column;

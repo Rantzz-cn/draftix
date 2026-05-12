@@ -51,7 +51,7 @@ Your repo is already Docker-ready (`Dockerfile` at the repo root). **One service
 When the deploy shows **Live**, open:
 
 - `https://<your-service-name>.onrender.com/` — landing page  
-- `https://<your-service-name>.onrender.com/app.html` — draft app  
+- `https://<your-service-name>.onrender.com/app` — draft app (`/app.html` redirects here)  
 - `https://<your-service-name>.onrender.com/healthz` — should return JSON with `"ok":true`
 
 Open **two browser tabs**, create a session in one, join in the other — bans should sync in real time.

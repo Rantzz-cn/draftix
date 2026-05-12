@@ -3,6 +3,7 @@ Allow: /
 Allow: /index.html
 
 # The app shell is a session-only page — no content for crawlers.
+Disallow: /app
 Disallow: /app.html
 Disallow: /img
 Disallow: /healthz

@@ -633,14 +633,33 @@ async function main() {
     upstream.on("timeout", () => { upstream.destroy(); try { res.status(504).end(); } catch (_) {} });
   });
 
-  // ─── Legacy redirect: /?code=XXX → /app.html?code=XXX ───
+  const appHtmlPath = path.join(__dirname, "public", "app.html");
+
+  // ─── Draft app at clean URL /app (file on disk is still app.html) ───
+  function appendQuery(req) {
+    const i = req.url.indexOf("?");
+    return i >= 0 ? req.url.slice(i) : "";
+  }
+  app.get("/app", (_req, res) => {
+    res.type("html");
+    res.sendFile(appHtmlPath);
+  });
+  app.get("/app/", (req, res) => {
+    res.redirect(301, "/app" + appendQuery(req));
+  });
+  // Old bookmarks / shared links → canonical /app
+  app.get("/app.html", (req, res) => {
+    res.redirect(301, "/app" + appendQuery(req));
+  });
+
+  // ─── Legacy redirect: /?code=XXX → /app?code=XXX ───
   app.get("/", (req, res, next) => {
     if (req.query && req.query.code) {
       const params = new URLSearchParams();
       for (const [k, v] of Object.entries(req.query)) {
         if (typeof v === "string") params.set(k, v);
       }
-      return res.redirect(302, "/app.html?" + params.toString());
+      return res.redirect(302, "/app?" + params.toString());
     }
     next();
   });

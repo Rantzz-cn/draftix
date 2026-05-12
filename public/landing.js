@@ -1,10 +1,10 @@
 /**
  * DRAFTIX landing-page polish.
- * Tiny, framework-free. No socket.io, no draft logic — that lives in app.js on /app.html.
+ * Tiny, framework-free. No socket.io, no draft logic — that lives in app.js on /app.
  *   - Footer year + version (from /healthz)
  *   - Smooth-scroll for in-page anchors
  *   - Scroll-reveal via IntersectionObserver
- *   - Auto-redirect legacy /?code=XXX to /app.html?code=XXX
+ *   - Auto-redirect legacy /?code=XXX to /app?code=XXX
  */
 (function () {
   // ─── Auto-redirect legacy shared session URLs ───
@@ -12,7 +12,7 @@
   try {
     const sp = new URLSearchParams(location.search);
     if (sp.get("code")) {
-      location.replace("/app.html" + location.search + location.hash);
+      location.replace("/app" + location.search + location.hash);
       return;
     }
   } catch (_) { /* ignore */ }
