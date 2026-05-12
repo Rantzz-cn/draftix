@@ -13,7 +13,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="DRAFTIX" />
     <meta property="og:url" content="https://draftix.tech/app" />
-    <meta property="og:title" content="DRAFTIX — Draft Session" />
+    <meta property="og:title" content="DRAFTIX — Drafting Phase" />
     <meta property="og:description" content="Join a real-time Valorant draft session. No signup required." />
     <meta property="og:image" content="https://draftix.tech/images/og-1200x630.jpg" />
     <meta property="og:image:width" content="1200" />
@@ -23,7 +23,7 @@
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@draftix" />
-    <meta name="twitter:title" content="DRAFTIX — Draft Session" />
+    <meta name="twitter:title" content="DRAFTIX — Drafting Phase" />
     <meta name="twitter:description" content="Join a real-time Valorant draft session. No signup required." />
     <meta name="twitter:image" content="https://draftix.tech/images/og-1200x630.jpg" />
     <meta name="twitter:image:alt" content="DRAFTIX — Pick · Ban · Win." />
@@ -33,7 +33,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
 
-    <title>DRAFTIX — Draft Session</title>
+    <title>DRAFTIX — Drafting Phase</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="page-app">
@@ -61,7 +61,7 @@
 
       <div class="app-gate-inner">
         <header class="gate-hero">
-          <span class="hero-eyebrow">Draft Session</span>
+          <span class="hero-eyebrow">Drafting Phase</span>
           <h1 class="gate-title">Start or join a draft.</h1>
           <p class="gate-sub">Generate a session code or paste one a teammate shared. <strong>No signup, no install.</strong></p>
         </header>
@@ -173,6 +173,26 @@
                 <input id="tnB" type="text" maxlength="24" placeholder="Team B" />
               </div>
               <button type="button" id="btnSaveTeamNames" class="secondary">Save names</button>
+            </div>
+          </section>
+
+          <section id="gameSettingsEditor" class="team-name-editor game-settings-editor" hidden>
+            <div class="team-name-head">Game settings <span class="hint-inline">(host only - locks at start)</span></div>
+            <div class="game-settings-grid">
+              <div>
+                <label for="agentBanCount">Agent bans</label>
+                <select id="agentBanCount">
+                  <option value="0">0 total</option>
+                  <option value="2">2 total</option>
+                  <option value="4">4 total</option>
+                  <option value="6" selected>6 total</option>
+                  <option value="8">8 total</option>
+                  <option value="10">10 total</option>
+                  <option value="12">12 total</option>
+                </select>
+              </div>
+              <p class="setting-note" id="agentBanCountNote">Six total bans means three per side.</p>
+              <button type="button" id="btnSaveGameSettings" class="secondary">Save settings</button>
             </div>
           </section>
 

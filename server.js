@@ -26,6 +26,7 @@ const SOCKET_LIMITS = {
   claimCaptain:  [30, 60_000],
   setTeam:       [30, 60_000],
   setTeamNames:  [30, 60_000],
+  setGameSettings: [30, 60_000],
   startDraft:    [10, 60_000],
   banMap:        [60, 60_000],
   banAgent:      [60, 60_000],
@@ -43,6 +44,18 @@ const APP_VERSION = process.env.APP_VERSION || "1.1.1";
 function clean(s, max) {
   if (s == null) return "";
   return String(s).replace(/[\u0000-\u001F\u007F]/g, "").trim().slice(0, max);
+}
+
+function normalizeAgentBanCount(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return DEFAULT_AGENT_BAN_COUNT;
+  const whole = Math.trunc(n);
+  const even = whole % 2 === 0 ? whole : whole - 1;
+  return Math.min(MAX_AGENT_BAN_COUNT, Math.max(MIN_AGENT_BAN_COUNT, even));
+}
+
+function agentBanCountFor(session) {
+  return normalizeAgentBanCount(session && session.settings && session.settings.agentBanCount);
 }
 
 function getJson(url) {
@@ -73,7 +86,9 @@ function getJson(url) {
 }
 
 const explicitPortEnv = process.env.PORT != null && String(process.env.PORT).trim() !== "";
-const AGENT_BAN_COUNT = 6;
+const DEFAULT_AGENT_BAN_COUNT = 6;
+const MIN_AGENT_BAN_COUNT = 0;
+const MAX_AGENT_BAN_COUNT = 12;
 const VAL_AGENTS = "https://valorant-api.com/v1/agents?isPlayableCharacter=true&language=en-US";
 const VAL_MAPS = "https://valorant-api.com/v1/maps?language=en-US";
 /** Competitive pool only (names must match Valorant API `displayName`). */
@@ -196,7 +211,7 @@ function performAutoBan(session) {
     if (!remaining.length) return;
     const choice = remaining[Math.floor(Math.random() * remaining.length)];
     session.agentBans.push(choice.uuid);
-    if (session.agentBans.length >= AGENT_BAN_COUNT) {
+    if (session.agentBans.length >= agentBanCountFor(session)) {
       session.phase = "done";
       clearTurnTimer(session);
     } else {
@@ -283,6 +298,9 @@ function sessionView(session, forSocketId) {
     sidePickerTeam: session.sidePickerTeam || null,
     hostId: session.hostId,
     teamNames: session.teamNames || { A: "Team A", B: "Team B" },
+    settings: {
+      agentBanCount: agentBanCountFor(session),
+    },
     captainNames: {
       A: captainA ? nick(session, captainA) : null,
       B: captainB ? nick(session, captainB) : null,
@@ -331,6 +349,7 @@ function createSession(hostId, roomCode) {
     nicks: new Map(),
     teamMembers: new Map(),
     teamNames: { A: "Team A", B: "Team B" },
+    settings: { agentBanCount: DEFAULT_AGENT_BAN_COUNT },
     chat: [],                  // [{ id, ts, fromId, fromName, team, text }]
     mapBans: [],
     agentBans: [],
@@ -1109,10 +1128,15 @@ async function main() {
         return;
       }
       session.selectedSide = side;
-      session.phase = "agent_ban";
-      // Convention: the side-picker (loser of map veto) bans agents first.
-      session.currentTurn = picker;
-      armTurnTimer(session, io);
+      if (agentBanCountFor(session) <= 0) {
+        session.phase = "done";
+        clearTurnTimer(session);
+      } else {
+        session.phase = "agent_ban";
+        // Convention: the side-picker (loser of map veto) bans agents first.
+        session.currentTurn = picker;
+        armTurnTimer(session, io);
+      }
       broadcastSession(io, session);
       if (typeof cb === "function") cb({ ok: true });
     }));
@@ -1180,6 +1204,26 @@ async function main() {
       if (typeof cb === "function") cb({ ok: true });
     }));
 
+    socket.on("setGameSettings", (payload, cb) => withLimit(socket, "setGameSettings", cb, () => {
+      const code = payload && String(payload.code).toUpperCase();
+      const session = sessions.get(code);
+      if (!session || session.hostId !== socket.id) {
+        if (typeof cb === "function") cb({ ok: false, error: "Host only" });
+        return;
+      }
+      if (session.phase !== "lobby") {
+        if (typeof cb === "function") cb({ ok: false, error: "Settings lock at draft start" });
+        return;
+      }
+      const agentBanCount = normalizeAgentBanCount(payload && payload.agentBanCount);
+      session.settings = {
+        ...(session.settings || {}),
+        agentBanCount,
+      };
+      broadcastSession(io, session);
+      if (typeof cb === "function") cb({ ok: true });
+    }));
+
     socket.on("banAgent", (payload, cb) => withLimit(socket, "banAgent", cb, () => {
       const code = payload && String(payload.code).toUpperCase();
       const agentUuid = payload && payload.uuid;
@@ -1198,12 +1242,12 @@ async function main() {
         if (typeof cb === "function") cb({ ok: false, error: "Bad agent" });
         return;
       }
-      if (session.agentBans.length >= AGENT_BAN_COUNT) {
+      if (session.agentBans.length >= agentBanCountFor(session)) {
         if (typeof cb === "function") cb({ ok: false, error: "Ban phase over" });
         return;
       }
       session.agentBans.push(agentUuid);
-      if (session.agentBans.length >= AGENT_BAN_COUNT) {
+      if (session.agentBans.length >= agentBanCountFor(session)) {
         session.phase = "done";
         clearTurnTimer(session);
       } else {

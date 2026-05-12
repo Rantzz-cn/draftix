@@ -110,6 +110,14 @@
     if (!state || !state.teamNames) return side === "A" ? "Team A" : "Team B";
     return state.teamNames[side] || (side === "A" ? "Team A" : "Team B");
   }
+  function agentBanCount(state) {
+    const n = Number(state && state.settings && state.settings.agentBanCount);
+    return Number.isFinite(n) ? Math.max(0, Math.min(12, Math.trunc(n))) : 6;
+  }
+  function agentBanCountNote(total) {
+    if (total <= 0) return "Agent ban phase will be skipped after side pick.";
+    return total + " total bans means " + Math.floor(total / 2) + " per side.";
+  }
   function showError(el, msg) {
     if (!el) return;
     if (!msg) { el.hidden = true; el.textContent = ""; return; }
@@ -513,7 +521,7 @@
         return;
       }
       if (state.phase === "agent_ban") {
-        const total = 6;
+        const total = agentBanCount(state);
         const idx = Math.min((state.agentBans || []).length, total - 1);
         phaseTitle.textContent = "Agent Ban Phase";
         phaseRound.textContent = "Round " + (idx + 1) + " of " + total;
@@ -584,11 +592,15 @@
       const actB = $("lobbyActionsB");
       const hostStart = $("hostStart");
       const lobbyHint = $("lobbyHint");
+      const editor = $("teamNameEditor");
+      const settingsEditor = $("gameSettingsEditor");
 
       actA.hidden = !lobby;
       actB.hidden = !lobby;
       hostStart.hidden = !(lobby && state.me && state.me.isHost);
       lobbyHint.hidden = !lobby;
+      if (editor) editor.hidden = !(lobby && state.me && state.me.isHost);
+      if (settingsEditor) settingsEditor.hidden = !(lobby && state.me && state.me.isHost);
 
       if (!lobby) return;
 
@@ -614,16 +626,26 @@
       $("btnJoinB").textContent = me.myTeam === "B" && !me.isCaptain ? "✓ On " + tB : "Join " + tB;
 
       // Host-only team-name editor
-      const editor = $("teamNameEditor");
       if (editor) {
         const showEditor = lobby && me.isHost;
-        editor.hidden = !showEditor;
         if (showEditor) {
           // Only refill inputs when they're empty / out-of-sync, so we don't
           // clobber the host's mid-typing characters on broadcasts.
           const inA = $("tnA"); const inB = $("tnB");
           if (inA && document.activeElement !== inA && inA.value.trim() === "") inA.value = state.teamNames ? state.teamNames.A : "";
           if (inB && document.activeElement !== inB && inB.value.trim() === "") inB.value = state.teamNames ? state.teamNames.B : "";
+        }
+      }
+
+      // Host-only game settings editor
+      if (settingsEditor) {
+        const showSettings = lobby && me.isHost;
+        if (showSettings) {
+          const select = $("agentBanCount");
+          const note = $("agentBanCountNote");
+          const total = agentBanCount(state);
+          if (select && document.activeElement !== select) select.value = String(total);
+          if (note) note.textContent = agentBanCountNote(total);
         }
       }
     }
@@ -682,7 +704,7 @@
       bar.innerHTML = "";
 
       if (state.phase === "agent_ban" || (state.phase === "done" && (state.agentBans || []).length > 0)) {
-        const total = 6;
+        const total = agentBanCount(state);
         const agents = (state.catalog && state.catalog.agents) || [];
         const bansArr = state.agentBans || [];
         for (let i = 0; i < total; i++) {
@@ -989,8 +1011,9 @@
 
       if (state.phase === "agent_ban") {
         agentsSection.hidden = false;
-        const remaining = 6 - (state.agentBans || []).length;
-        $("agentsHelp").textContent = "Agents to ban: " + remaining + " of 6";
+        const totalAgentBans = agentBanCount(state);
+        const remaining = Math.max(0, totalAgentBans - (state.agentBans || []).length);
+        $("agentsHelp").textContent = "Agents to ban: " + remaining + " of " + totalAgentBans;
         renderGrid(
           $("agentGrid"),
           agents,
@@ -1353,6 +1376,32 @@
       });
     }
 
+    // Game settings
+    const agentBanSelect = $("agentBanCount");
+    const agentBanNote = $("agentBanCountNote");
+    if (agentBanSelect && agentBanNote) {
+      agentBanSelect.addEventListener("change", function () {
+        agentBanNote.textContent = agentBanCountNote(Number(agentBanSelect.value));
+      });
+    }
+    const btnSaveGameSettings = $("btnSaveGameSettings");
+    if (btnSaveGameSettings) {
+      btnSaveGameSettings.addEventListener("click", function () {
+        if (!myCode) return;
+        const agentBanCountValue = agentBanSelect ? Number(agentBanSelect.value) : 6;
+        socket.emit("setGameSettings", { code: myCode, agentBanCount: agentBanCountValue }, function (res) {
+          if (res && res.ok) {
+            btnSaveGameSettings.textContent = "Saved";
+            setTimeout(() => { btnSaveGameSettings.textContent = "Save settings"; }, 1500);
+            toast.success("Game settings saved");
+          } else if (res && res.error) {
+            showError($("roomError"), res.error);
+            toast.error(res.error);
+          }
+        });
+      });
+    }
+
     // Side pick
     const btnSideA = $("btnSideAttack");
     const btnSideD = $("btnSideDefense");
@@ -1484,6 +1533,7 @@
         side,
         sideTeam: sidePicker ? teamName(state, sidePicker) : "",
         sideLabel: side ? (side === "attack" ? "Attack" : "Defense") : "",
+        agentBanCount: agentBanCount(state),
         bannedAgents,                              // [{ uuid, name, icon, image }]
         bannedNames: bannedAgents.map((a) => a.name),
       };
@@ -1613,15 +1663,20 @@
       ctx.font = '700 22px "Rajdhani", sans-serif';
       ctx.fillText("BANNED AGENTS", PAD, agY);
 
-      // Agent row (up to 6 icons)
+      // Agent rows, max six per line for larger custom ban counts.
+      const agentsToDraw = summary.bannedAgents.slice(0, Math.max(summary.agentBanCount || 6, summary.bannedAgents.length));
       const agentImgs = await Promise.all(
-        summary.bannedAgents.slice(0, 6).map((a) => loadImg(proxied(a.icon || a.image)))
+        agentsToDraw.map((a) => loadImg(proxied(a.icon || a.image)))
       );
-      const cellSize = 130, gap = 18;
+      const cellSize = agentsToDraw.length > 6 ? 104 : 130;
+      const gap = agentsToDraw.length > 6 ? 14 : 18;
+      const perRow = 6;
       const startY = agY + 40;
-      summary.bannedAgents.slice(0, 6).forEach((a, i) => {
-        const x = PAD + i * (cellSize + gap);
-        const y = startY;
+      agentsToDraw.forEach((a, i) => {
+        const row = Math.floor(i / perRow);
+        const col = i % perRow;
+        const x = PAD + col * (cellSize + gap);
+        const y = startY + row * (cellSize + 44);
         ctx.fillStyle = "#131e33";
         roundRect(ctx, x, y, cellSize, cellSize, 8);
         ctx.fill();
@@ -1638,14 +1693,15 @@
           ctx.restore();
         }
         ctx.fillStyle = "#ffffff";
-        ctx.font = '600 18px "Rajdhani", sans-serif';
+        ctx.font = (cellSize < 120 ? '600 15px "Rajdhani", sans-serif' : '600 18px "Rajdhani", sans-serif');
         const name = (a.name || "").toUpperCase();
         const nameW = ctx.measureText(name).width;
         ctx.fillText(name, x + (cellSize - nameW) / 2, y + cellSize + 12);
       });
 
       // Teams + captains
-      const teamY = startY + cellSize + 90;
+      const agentRows = Math.max(1, Math.ceil(agentsToDraw.length / perRow));
+      const teamY = startY + agentRows * cellSize + (agentRows - 1) * 44 + 90;
       ctx.font = '700 22px "Rajdhani", sans-serif';
       ctx.fillStyle = "#7e90b2";
       ctx.fillText("TEAM A CAPTAIN", PAD, teamY);
