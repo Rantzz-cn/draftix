@@ -13,198 +13,234 @@
     <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
     <title>Status — DRAFTIX</title>
-    <!-- Inline styles only; logic in /status.js for CSP (no inline scripts). -->
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Page-specific chrome; logic in /status.js (no inline scripts). -->
     <style>
-      * { box-sizing: border-box; }
-      html, body {
-        margin: 0; padding: 0;
-        background: #060912;
-        color: #e7eefb;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-        line-height: 1.55;
+      .status-inner { padding: 0.25rem 0 3rem; }
+      .status-inner h1 {
+        color: var(--text);
+        font-size: clamp(1.5rem, 4vw, 2.1rem);
+        margin: 0 0 6px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-family: 'Saira Condensed', 'Rajdhani', sans-serif;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        gap: 14px;
       }
-      body {
-        background:
-          radial-gradient(80% 60% at 80% 10%, rgba(255, 70, 85, 0.10), transparent 60%),
-          radial-gradient(70% 50% at 10% 90%, rgba(74, 141, 255, 0.08), transparent 60%),
-          linear-gradient(180deg, #060912 0%, #0a1020 100%);
-        min-height: 100vh;
+      .status-inner .sub {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin: 0 0 2rem;
       }
-      .wrap { max-width: 980px; margin: 0 auto; padding: 40px 24px 64px; }
-      header.bar {
-        display: flex; justify-content: space-between; align-items: center;
-        gap: 16px; padding-bottom: 24px; margin-bottom: 32px;
-        border-bottom: 1px solid #1f2c45;
-      }
-      .brand { color: #fff; text-decoration: none; font-size: 28px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
-      .brand span { color: #ff4655; }
-      .back { color: #7e90b2; text-decoration: none; font-size: 14px; }
-      .back:hover { color: #fff; }
-
-      h1 {
-        color: #fff; font-size: 36px; margin: 0 0 6px;
-        letter-spacing: 1px; text-transform: uppercase;
-        display: flex; align-items: center; gap: 14px;
-      }
-      .sub { color: #7e90b2; font-size: 14px; margin: 0 0 32px; }
-
       .pulse {
-        display: inline-grid; place-items: center;
-        width: 14px; height: 14px; border-radius: 50%;
+        display: inline-grid;
+        place-items: center;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
         position: relative;
       }
       .pulse::before {
-        content: ''; position: absolute; inset: 0; border-radius: 50%;
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
         background: currentColor;
       }
       .pulse::after {
-        content: ''; position: absolute; inset: -6px; border-radius: 50%;
-        background: currentColor; opacity: 0.4;
-        animation: pulse 1.8s ease-out infinite;
+        content: "";
+        position: absolute;
+        inset: -6px;
+        border-radius: 50%;
+        background: currentColor;
+        opacity: 0.4;
+        animation: status-pulse 1.8s ease-out infinite;
       }
-      .pulse.online  { color: #4ade80; }
-      .pulse.offline { color: #ff4655; }
-      @keyframes pulse {
-        0%   { transform: scale(0.7); opacity: 0.4; }
+      .pulse.online { color: #4ade80; }
+      .pulse.offline { color: var(--accent); }
+      @keyframes status-pulse {
+        0% { transform: scale(0.7); opacity: 0.4; }
         100% { transform: scale(2.2); opacity: 0; }
       }
-
-      .grid {
+      .status-inner .grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 16px;
         margin-bottom: 32px;
       }
-      .card {
-        background: linear-gradient(180deg, rgba(14, 22, 38, 0.85) 0%, rgba(11, 17, 32, 0.85) 100%);
-        border: 1px solid #1f2c45;
+      .status-inner .card {
+        background: linear-gradient(180deg, rgba(14, 22, 38, 0.92) 0%, rgba(11, 17, 32, 0.92) 100%);
+        border: 1px solid var(--border);
         border-radius: 10px;
         padding: 20px 22px;
         position: relative;
         overflow: hidden;
       }
-      .card::before {
-        content: ''; position: absolute; top: 0; left: 0; right: 0;
+      .status-inner .card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
         height: 2px;
-        background: linear-gradient(90deg, #ff4655 0%, transparent 80%);
+        background: linear-gradient(90deg, var(--accent) 0%, transparent 80%);
         opacity: 0;
         transition: opacity 0.3s;
       }
-      .card:hover::before { opacity: 1; }
-      .card-label {
-        color: #7e90b2; font-size: 11px;
-        letter-spacing: 2px; text-transform: uppercase;
+      .status-inner .card:hover::before { opacity: 1; }
+      .status-inner .card-label {
+        color: var(--muted);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
         font-weight: 700;
+        font-family: 'Rajdhani', sans-serif;
         margin-bottom: 10px;
       }
-      .card-value {
-        color: #fff; font-size: 34px;
-        font-weight: 800; letter-spacing: 0.5px;
+      .status-inner .card-value {
+        color: #fff;
+        font-size: 34px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
         line-height: 1.1;
         font-variant-numeric: tabular-nums;
+        font-family: 'Barlow', sans-serif;
       }
-      .card-value.small { font-size: 20px; }
-      .card-sub {
-        color: #7e90b2; font-size: 13px; margin-top: 6px;
+      .status-inner .card-value.small { font-size: 20px; }
+      .status-inner .card-sub {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 6px;
       }
-
-      .meta {
-        display: flex; flex-wrap: wrap; gap: 18px;
-        color: #7e90b2; font-size: 13px;
-        padding-top: 24px; border-top: 1px solid #1f2c45;
+      .status-inner .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        color: var(--muted);
+        font-size: 13px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
       }
-      .meta a { color: #7e90b2; text-decoration: none; border-bottom: 1px dotted #475873; }
-      .meta a:hover { color: #ff4655; border-bottom-color: #ff4655; }
-      .meta code {
+      .status-inner .meta a {
+        color: var(--muted);
+        text-decoration: none;
+        border-bottom: 1px dotted var(--dim);
+      }
+      .status-inner .meta a:hover {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+      }
+      .status-inner .meta code {
         background: rgba(255, 255, 255, 0.04);
-        border: 1px solid #1f2c45;
-        padding: 1px 6px; border-radius: 3px;
-        font-family: 'Share Tech Mono', Consolas, monospace;
+        border: 1px solid var(--border);
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-family: "Share Tech Mono", Consolas, monospace;
         font-size: 12px;
-        color: #e7eefb;
+        color: var(--text);
       }
-
-      .error {
+      .status-inner .error {
         background: rgba(255, 70, 85, 0.08);
         border: 1px solid rgba(255, 70, 85, 0.4);
-        color: #ff6a78;
-        padding: 16px 20px; border-radius: 8px;
+        color: var(--accent-hi);
+        padding: 16px 20px;
+        border-radius: var(--radius);
         margin-bottom: 24px;
       }
-
-      footer.foot {
-        margin-top: 40px; padding-top: 24px;
-        border-top: 1px solid #1f2c45;
-        color: #7e90b2; font-size: 14px;
-        display: flex; gap: 12px; flex-wrap: wrap;
+      .status-inner footer.foot {
+        margin-top: 40px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 14px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
       }
-      footer.foot a { color: #7e90b2; text-decoration: none; }
-      footer.foot a:hover { color: #ff4655; }
+      .status-inner footer.foot a {
+        color: var(--muted);
+        text-decoration: none;
+      }
+      .status-inner footer.foot a:hover { color: var(--accent); }
     </style>
   </head>
-  <body>
-    <div class="wrap">
-      <header class="bar">
-        <a href="/" class="brand" aria-label="DRAFTIX home">DRAFT<span>IX</span></a>
-        <a href="/" class="back">← Back to home</a>
-      </header>
+  <body class="page-status page-landing">
+    <div class="landing">
+      <nav class="landing-nav">
+        <a href="/" class="brand brand-sm">
+          <img class="brand-mark" src="images/draftix.png" alt="DRAFTIX" />
+          <span class="brand-name">DRAFT<span>IX</span></span>
+        </a>
+        <ul class="landing-nav-links">
+          <li><span class="nosignup-badge" title="No signup, no install — just open and play">No signup</span></li>
+          <li><a href="/#features">Features</a></li>
+          <li><a href="/#how">How it works</a></li>
+          <li><a href="/#pool">Map pool</a></li>
+          <li><a href="/team-balance.html">Team balancer</a></li>
+          <li><a href="/app" class="nav-cta">Open app</a></li>
+        </ul>
+      </nav>
 
-      <h1>
-        <span class="pulse online" id="pulse" aria-hidden="true"></span>
-        <span id="title">Server status</span>
-      </h1>
-      <p class="sub" id="subtitle">Live metrics, refreshed automatically every 5 seconds.</p>
+      <div class="status-inner">
+        <h1>
+          <span class="pulse online" id="pulse" aria-hidden="true"></span>
+          <span id="title">Server status</span>
+        </h1>
+        <p class="sub" id="subtitle">Live metrics, refreshed automatically every 5 seconds.</p>
 
-      <div id="errorBox" class="error" hidden></div>
+        <div id="errorBox" class="error" hidden></div>
 
-      <section class="grid" id="cards">
-        <div class="card">
-          <div class="card-label">Status</div>
-          <div class="card-value small" id="kStatus">Loading…</div>
-          <div class="card-sub" id="kStatusSub">Reaching server…</div>
-        </div>
-        <div class="card">
-          <div class="card-label">Version</div>
-          <div class="card-value small" id="kVersion">—</div>
-          <div class="card-sub">Build identifier</div>
-        </div>
-        <div class="card">
-          <div class="card-label">Uptime</div>
-          <div class="card-value" id="kUptime">—</div>
-          <div class="card-sub" id="kUptimeSub">Since last restart</div>
-        </div>
-        <div class="card">
-          <div class="card-label">Active sessions</div>
-          <div class="card-value" id="kSessions">—</div>
-          <div class="card-sub">Drafts in flight right now</div>
-        </div>
-        <div class="card">
-          <div class="card-label">Codes issued</div>
-          <div class="card-value" id="kCodes">—</div>
-          <div class="card-sub">Unique codes ever generated</div>
-        </div>
-        <div class="card">
-          <div class="card-label">Catalog</div>
-          <div class="card-value small" id="kCatalog">—</div>
-          <div class="card-sub">Maps & agents from Valorant-API</div>
-        </div>
-      </section>
+        <section class="grid" id="cards">
+          <div class="card">
+            <div class="card-label">Status</div>
+            <div class="card-value small" id="kStatus">Loading…</div>
+            <div class="card-sub" id="kStatusSub">Reaching server…</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Version</div>
+            <div class="card-value small" id="kVersion">—</div>
+            <div class="card-sub">Build identifier</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Uptime</div>
+            <div class="card-value" id="kUptime">—</div>
+            <div class="card-sub" id="kUptimeSub">Since last restart</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Active sessions</div>
+            <div class="card-value" id="kSessions">—</div>
+            <div class="card-sub">Drafts in flight right now</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Codes issued</div>
+            <div class="card-value" id="kCodes">—</div>
+            <div class="card-sub">Unique codes ever generated</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Catalog</div>
+            <div class="card-value small" id="kCatalog">—</div>
+            <div class="card-sub">Maps & agents from Valorant-API</div>
+          </div>
+        </section>
 
-      <div class="meta">
-        <span>Last update: <span id="lastUpdate">—</span></span>
-        <span>·</span>
-        <span>Raw endpoint: <a href="/healthz" target="_blank" rel="noopener">/healthz</a></span>
-        <span>·</span>
-        <span>Turn timer: <code id="kTurn">—</code></span>
+        <div class="meta">
+          <span>Last update: <span id="lastUpdate">—</span></span>
+          <span>·</span>
+          <span>Raw endpoint: <a href="/healthz" target="_blank" rel="noopener">/healthz</a></span>
+          <span>·</span>
+          <span>Turn timer: <code id="kTurn">—</code></span>
+        </div>
+
+        <footer class="foot">
+          <a href="/">← Back to home</a>
+          <span>·</span>
+          <a href="/privacy.html">Privacy</a>
+          <span>·</span>
+          <a href="/terms.html">Terms</a>
+        </footer>
       </div>
-
-      <footer class="foot">
-        <a href="/">← Back to home</a>
-        <span>·</span>
-        <a href="/privacy.html">Privacy</a>
-        <span>·</span>
-        <a href="/terms.html">Terms</a>
-      </footer>
     </div>
 
     <script src="/status.js" defer></script>

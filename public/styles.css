@@ -2871,3 +2871,20 @@ body.modal-open .kofi-fab {
   .landing-nav-links { gap: 0; }
   .gate-title { font-size: 2rem; }
 }
+
+/* ─── Satellite pages (shared top nav + width) ─────────────────── */
+.page-legal .legal-wrap,
+.page-status .status-inner {
+  max-width: 880px;
+  margin: 0 auto;
+}
+.page-team-balance .tb-wrap {
+  max-width: 920px;
+  margin: 0 auto;
+}
+.page-team-balance {
+  --tb-font: "Poppins", system-ui, -apple-system, sans-serif;
+}
+body.page-team-balance {
+  font-family: var(--tb-font);
+}
