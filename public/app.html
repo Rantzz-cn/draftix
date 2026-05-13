@@ -331,21 +331,91 @@
           <p class="modal-subtitle">Tune the draft rules before captains start. Settings lock when the draft begins.</p>
         </div>
 
+        <fieldset class="settings-presets-panel">
+          <legend>Draft preset</legend>
+          <div class="settings-presets" aria-label="Draft presets">
+            <label class="settings-preset">
+              <input type="radio" name="draftPreset" value="competitive" checked>
+              <span>
+                <strong>Competitive</strong>
+                <small>6 bans - 30s</small>
+              </span>
+            </label>
+            <label class="settings-preset">
+              <input type="radio" name="draftPreset" value="quick">
+              <span>
+                <strong>Quick scrim</strong>
+                <small>2 bans - 15s</small>
+              </span>
+            </label>
+            <label class="settings-preset">
+              <input type="radio" name="draftPreset" value="no-agents">
+              <span>
+                <strong>No agent bans</strong>
+                <small>Map veto only</small>
+              </span>
+            </label>
+            <label class="settings-preset">
+              <input type="radio" name="draftPreset" value="custom">
+              <span>
+                <strong>Custom</strong>
+                <small>Manual rules</small>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
         <div class="settings-panel">
-          <div class="settings-row">
-            <div>
-              <label for="agentBanCount">Agent bans</label>
-              <p id="agentBanCountNote" class="setting-note">Six total bans means three per side.</p>
+          <div class="settings-group settings-options-group">
+            <div class="settings-section-label">Fine-tune settings</div>
+            <div class="settings-options-grid">
+            <div class="settings-row">
+              <div>
+                <label for="agentBanCount">Agent bans</label>
+                <p id="agentBanCountNote" class="setting-note">Six total bans means three per side.</p>
+              </div>
+              <select id="agentBanCount">
+                <option value="0">0 total</option>
+                <option value="2">2 total</option>
+                <option value="4">4 total</option>
+                <option value="6" selected>6 total</option>
+                <option value="8">8 total</option>
+                <option value="10">10 total</option>
+                <option value="12">12 total</option>
+              </select>
             </div>
-            <select id="agentBanCount">
-              <option value="0">0 total</option>
-              <option value="2">2 total</option>
-              <option value="4">4 total</option>
-              <option value="6" selected>6 total</option>
-              <option value="8">8 total</option>
-              <option value="10">10 total</option>
-              <option value="12">12 total</option>
-            </select>
+            <div class="settings-row">
+              <div>
+                <label for="turnTimeoutMs">Turn timer</label>
+                <p id="turnTimeoutNote" class="setting-note">Auto-ban triggers after 30 seconds.</p>
+              </div>
+              <select id="turnTimeoutMs">
+                <option value="15000">15 seconds</option>
+                <option value="30000" selected>30 seconds</option>
+                <option value="45000">45 seconds</option>
+                <option value="60000">60 seconds</option>
+              </select>
+            </div>
+          </div>
+          </div>
+          <div class="settings-group settings-rules-group">
+            <div class="settings-section-label">Rules</div>
+            <div class="settings-toggle-grid">
+            <label class="settings-toggle">
+              <input type="checkbox" id="sidePickEnabled" checked>
+              <span>
+                <strong>Side pick</strong>
+                <small>Winning coin side chooses attack or defense.</small>
+              </span>
+            </label>
+            <label class="settings-toggle">
+              <input type="checkbox" id="autoBanEnabled" checked>
+              <span>
+                <strong>Auto-ban timer</strong>
+                <small>Expired turns choose a random legal ban.</small>
+              </span>
+            </label>
+          </div>
           </div>
         </div>
 

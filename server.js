@@ -58,6 +58,48 @@ function agentBanCountFor(session) {
   return normalizeAgentBanCount(session && session.settings && session.settings.agentBanCount);
 }
 
+function normalizeTurnTimeoutMs(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return DEFAULT_GAME_SETTINGS.turnTimeoutMs;
+  const ms = n > 1000 ? Math.trunc(n) : Math.trunc(n * 1000);
+  return ALLOWED_TURN_TIMEOUTS_MS.has(ms) ? ms : DEFAULT_GAME_SETTINGS.turnTimeoutMs;
+}
+
+function normalizeBool(value, fallback) {
+  if (typeof value === "boolean") return value;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return fallback;
+}
+
+function normalizeDraftPreset(value) {
+  const preset = clean(value, 32);
+  return DRAFT_PRESETS.has(preset) ? preset : "custom";
+}
+
+function settingsFor(session) {
+  const raw = (session && session.settings) || {};
+  return {
+    draftPreset: normalizeDraftPreset(raw.draftPreset || DEFAULT_GAME_SETTINGS.draftPreset),
+    agentBanCount: normalizeAgentBanCount(raw.agentBanCount),
+    turnTimeoutMs: normalizeTurnTimeoutMs(raw.turnTimeoutMs),
+    autoBanEnabled: normalizeBool(raw.autoBanEnabled, DEFAULT_GAME_SETTINGS.autoBanEnabled),
+    sidePickEnabled: normalizeBool(raw.sidePickEnabled, DEFAULT_GAME_SETTINGS.sidePickEnabled),
+  };
+}
+
+function turnTimeoutFor(session) {
+  return settingsFor(session).turnTimeoutMs;
+}
+
+function autoBanEnabledFor(session) {
+  return settingsFor(session).autoBanEnabled;
+}
+
+function sidePickEnabledFor(session) {
+  return settingsFor(session).sidePickEnabled;
+}
+
 function getJson(url) {
   return new Promise((resolve, reject) => {
     const req = https.get(
@@ -89,6 +131,15 @@ const explicitPortEnv = process.env.PORT != null && String(process.env.PORT).tri
 const DEFAULT_AGENT_BAN_COUNT = 6;
 const MIN_AGENT_BAN_COUNT = 0;
 const MAX_AGENT_BAN_COUNT = 12;
+const ALLOWED_TURN_TIMEOUTS_MS = new Set([15_000, 30_000, 45_000, 60_000]);
+const DEFAULT_GAME_SETTINGS = {
+  draftPreset: "competitive",
+  agentBanCount: DEFAULT_AGENT_BAN_COUNT,
+  turnTimeoutMs: TURN_TIMEOUT_MS,
+  autoBanEnabled: true,
+  sidePickEnabled: true,
+};
+const DRAFT_PRESETS = new Set(["competitive", "quick", "no-agents", "custom"]);
 const VAL_AGENTS = "https://valorant-api.com/v1/agents?isPlayableCharacter=true&language=en-US";
 const VAL_MAPS = "https://valorant-api.com/v1/maps?language=en-US";
 /** Competitive pool only (names must match Valorant API `displayName`). */
@@ -176,14 +227,34 @@ function clearTurnTimer(session) {
 function armTurnTimer(session, io) {
   clearTurnTimer(session);
   if (session.phase !== "map_ban" && session.phase !== "agent_ban") return;
-  session.turnEndsAt = Date.now() + TURN_TIMEOUT_MS;
+  if (!autoBanEnabledFor(session)) return;
+  const turnTimeoutMs = turnTimeoutFor(session);
+  session.turnEndsAt = Date.now() + turnTimeoutMs;
   session._turnTimer = setTimeout(() => {
     // Validate phase is still timing — a captain may have banned just before us.
     if (session.phase !== "map_ban" && session.phase !== "agent_ban") return;
     performAutoBan(session);
     armTurnTimer(session, io);
     broadcastSession(io, session);
-  }, TURN_TIMEOUT_MS);
+  }, turnTimeoutMs);
+}
+
+function enterPostMapPhase(session, finalBanTurn) {
+  const nextTeam = finalBanTurn === "A" ? "B" : "A";
+  session.sidePickerTeam = nextTeam;
+  session.agentBans = [];
+  if (sidePickEnabledFor(session)) {
+    session.phase = "side_pick";
+    clearTurnTimer(session);
+    return;
+  }
+  if (agentBanCountFor(session) <= 0) {
+    session.phase = "done";
+    clearTurnTimer(session);
+    return;
+  }
+  session.phase = "agent_ban";
+  session.currentTurn = nextTeam;
 }
 
 function performAutoBan(session) {
@@ -197,11 +268,7 @@ function performAutoBan(session) {
     const left = catalog.maps.filter((m) => !session.mapBans.includes(m.uuid));
     if (left.length === 1) {
       session.selectedMap = left[0];
-      session.sidePickerTeam = turn === "A" ? "B" : "A";
-      session.phase = "side_pick";
-      session.agentBans = [];
-      // Side pick has no turn timer.
-      clearTurnTimer(session);
+      enterPostMapPhase(session, turn);
     } else {
       session.currentTurn = turn === "A" ? "B" : "A";
     }
@@ -298,9 +365,7 @@ function sessionView(session, forSocketId) {
     sidePickerTeam: session.sidePickerTeam || null,
     hostId: session.hostId,
     teamNames: session.teamNames || { A: "Team A", B: "Team B" },
-    settings: {
-      agentBanCount: agentBanCountFor(session),
-    },
+    settings: settingsFor(session),
     captainNames: {
       A: captainA ? nick(session, captainA) : null,
       B: captainB ? nick(session, captainB) : null,
@@ -317,7 +382,7 @@ function sessionView(session, forSocketId) {
     // to render a clock-skew-tolerant countdown.
     turnEndsAt: session.turnEndsAt || null,
     serverNow: Date.now(),
-    turnTimeoutMs: TURN_TIMEOUT_MS,
+    turnTimeoutMs: turnTimeoutFor(session),
     chat: Array.isArray(session.chat) ? session.chat.slice(-CHAT_HISTORY) : [],
     catalog,
   };
@@ -349,7 +414,7 @@ function createSession(hostId, roomCode) {
     nicks: new Map(),
     teamMembers: new Map(),
     teamNames: { A: "Team A", B: "Team B" },
-    settings: { agentBanCount: DEFAULT_AGENT_BAN_COUNT },
+    settings: { ...DEFAULT_GAME_SETTINGS },
     chat: [],                  // [{ id, ts, fromId, fromName, team, text }]
     mapBans: [],
     agentBans: [],
@@ -1096,11 +1161,8 @@ async function main() {
       const left = remainingMaps(session);
       if (left.length === 1) {
         session.selectedMap = left[0];
-        // Competitive procedure: team that did NOT make the final map ban picks side.
-        session.sidePickerTeam = turn === "A" ? "B" : "A";
-        session.phase = "side_pick";
-        session.agentBans = [];
-        clearTurnTimer(session);  // side pick has its own (lighter) flow, no turn timer
+        enterPostMapPhase(session, turn);
+        if (session.phase === "agent_ban") armTurnTimer(session, io);
       } else {
         session.currentTurn = turn === "A" ? "B" : "A";
         armTurnTimer(session, io);
@@ -1215,10 +1277,13 @@ async function main() {
         if (typeof cb === "function") cb({ ok: false, error: "Settings lock at draft start" });
         return;
       }
-      const agentBanCount = normalizeAgentBanCount(payload && payload.agentBanCount);
+      const currentSettings = settingsFor(session);
       session.settings = {
-        ...(session.settings || {}),
-        agentBanCount,
+        draftPreset: normalizeDraftPreset(payload && payload.draftPreset),
+        agentBanCount: normalizeAgentBanCount(payload && payload.agentBanCount),
+        turnTimeoutMs: normalizeTurnTimeoutMs(payload && payload.turnTimeoutMs),
+        autoBanEnabled: normalizeBool(payload && payload.autoBanEnabled, currentSettings.autoBanEnabled),
+        sidePickEnabled: normalizeBool(payload && payload.sidePickEnabled, currentSettings.sidePickEnabled),
       };
       broadcastSession(io, session);
       if (typeof cb === "function") cb({ ok: true });

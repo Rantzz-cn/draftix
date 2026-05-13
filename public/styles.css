@@ -1544,62 +1544,262 @@ button:not(:disabled):active { transform: scale(0.97); }
 .settings-modal-card {
   max-width: 620px;
   border-color: var(--accent-deep);
+  padding: 1.45rem 1.65rem 1.25rem;
+  background:
+    radial-gradient(ellipse 80% 120% at 50% 0%, rgba(74,141,255,0.08) 0%, transparent 58%),
+    linear-gradient(180deg, rgba(19,30,51,0.98) 0%, rgba(9,15,29,0.99) 100%);
+}
+.settings-modal-card .modal-header { margin-bottom: 1.05rem; }
+.settings-modal-card .modal-eyebrow { margin-bottom: 0.55rem; }
+.settings-modal-card .modal-title {
+  font-size: 1.9rem;
+  letter-spacing: 0.15em;
+}
+.settings-modal-card .modal-subtitle {
+  max-width: 32rem;
+  margin: 0.45rem auto 0;
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+.settings-presets-panel,
+.settings-group {
+  animation: modalFadeUp 0.6s ease-out 0.2s both;
+}
+.settings-presets-panel {
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+}
+.settings-presets-panel legend,
+.settings-section-label {
+  margin-bottom: 0.5rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.settings-presets {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.settings-preset { display: block; cursor: pointer; min-width: 0; }
+.settings-preset input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.settings-preset span,
+.settings-row,
+.settings-toggle {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(10, 16, 31, 0.78);
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+.settings-preset span {
+  display: flex;
+  min-height: 4.35rem;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.7rem 0.72rem;
+}
+.settings-preset strong,
+.settings-toggle strong,
+.settings-row label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+  line-height: 1.05;
+}
+.settings-preset small,
+.settings-toggle small,
+.setting-note {
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.settings-preset:hover span,
+.settings-row:hover,
+.settings-toggle:hover { border-color: rgba(255,255,255,0.22); }
+.settings-preset input:focus-visible + span,
+.settings-toggle input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.settings-preset input:checked + span {
+  border-color: var(--accent);
+  background:
+    linear-gradient(135deg, rgba(255,70,85,0.17) 0%, rgba(74,141,255,0.08) 100%),
+    rgba(10, 16, 31, 0.9);
+  box-shadow: 0 0 0 1px rgba(255,70,85,0.14), 0 16px 34px rgba(255,70,85,0.08);
+}
+.settings-preset input:checked + span strong,
+.settings-preset input:checked + span small {
+  color: var(--accent);
 }
 .settings-panel {
   animation: modalFadeUp 0.6s ease-out 0.25s both;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background:
-    linear-gradient(135deg, rgba(255,70,85,0.08) 0%, transparent 38%),
-    rgba(255,255,255,0.025);
-  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.settings-options-grid,
+.settings-toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
 }
 .settings-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(10rem, 13rem);
-  gap: 1rem;
-  align-items: center;
+  grid-template-rows: auto auto auto;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+}
+.settings-row > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 0.55rem;
+  align-items: start;
+}
+.settings-row > div::before {
+  content: "X";
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid rgba(255,70,85,0.4);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  background: var(--accent-lo);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+}
+.settings-row:has(#turnTimeoutMs) > div::before {
+  content: "T";
 }
 .settings-row label {
-  display: block;
-  margin-bottom: 0.35rem;
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #fff;
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: start;
+  width: 100%;
+  margin: 0 0 0.18rem;
+  text-align: left;
+  overflow-wrap: normal;
+}
+.settings-row .setting-note {
+  grid-column: 2;
+  grid-row: 2;
+  width: 100%;
 }
 .settings-row select {
   width: 100%;
-  height: var(--gate-control-h, 3.125rem);
-  padding: 0 0.9rem;
-  background: var(--panel-3);
-  border: 1px solid rgba(255,70,85,0.4);
-  border-radius: var(--radius);
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,70,85,0.35);
+  border-radius: var(--radius-sm);
   color: var(--text);
-  font: inherit;
+  color-scheme: dark;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.settings-row select option {
+  background: var(--panel-2);
+  color: var(--text);
+}
+.settings-row select option:checked {
+  background: var(--panel-3);
+  color: #fff;
 }
 .settings-row select:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-lo);
 }
-.setting-note {
-  color: var(--muted);
-  font-size: 0.86rem;
-  line-height: 1.45;
+.settings-toggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  min-height: 4.7rem;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+}
+.settings-toggle input {
+  appearance: none;
+  width: 2rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(51,212,137,0.45);
+  position: relative;
+}
+.settings-toggle input::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: var(--dim);
+  transition: transform 0.16s ease, background 0.16s ease;
+}
+.settings-toggle input:checked {
+  background: rgba(51,212,137,0.22);
+}
+.settings-toggle input:checked::after {
+  transform: translateX(1rem);
+  background: var(--ok);
+}
+.settings-toggle span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.22rem;
+}
+.settings-toggle:has(input:checked) {
+  border-color: rgba(51, 212, 137, 0.55);
+  background:
+    linear-gradient(135deg, rgba(51,212,137,0.08) 0%, rgba(74,141,255,0.05) 100%),
+    rgba(10, 16, 31, 0.78);
 }
 .settings-modal-actions {
   display: flex;
   flex-direction: row-reverse;
   gap: 0.75rem;
   justify-content: center;
+  padding-top: 1rem;
   margin-top: 1rem;
+  border-top: 1px solid var(--border);
   animation: modalFadeUp 0.6s ease-out 0.35s both;
 }
 .settings-modal-actions button {
-  min-width: 10rem;
+  min-width: 9.25rem;
+  min-height: 2.8rem;
+}
+
+@media (max-width: 680px) {
+  .settings-modal-card { padding: 1.15rem 1rem 1rem; }
+  .settings-modal-card .modal-title { font-size: 1.55rem; }
+  .settings-presets,
+  .settings-options-grid,
+  .settings-toggle-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ─── Side pick ─────────────────────────────────── */

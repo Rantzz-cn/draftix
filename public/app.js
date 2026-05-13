@@ -114,9 +114,59 @@
     const n = Number(state && state.settings && state.settings.agentBanCount);
     return Number.isFinite(n) ? Math.max(0, Math.min(12, Math.trunc(n))) : 6;
   }
-  function agentBanCountNote(total) {
-    if (total <= 0) return "Agent ban phase will be skipped after side pick.";
+  function agentBanCountNote(total, sidePickEnabled) {
+    if (total <= 0) return "Agent ban phase will be skipped after " + (sidePickEnabled === false ? "map veto." : "side pick.");
     return total + " total bans means " + Math.floor(total / 2) + " per side.";
+  }
+  const DRAFT_PRESETS = {
+    competitive: {
+      draftPreset: "competitive",
+      agentBanCount: 6,
+      turnTimeoutMs: 30000,
+      sidePickEnabled: true,
+      autoBanEnabled: true,
+    },
+    quick: {
+      draftPreset: "quick",
+      agentBanCount: 2,
+      turnTimeoutMs: 15000,
+      sidePickEnabled: true,
+      autoBanEnabled: true,
+    },
+    "no-agents": {
+      draftPreset: "no-agents",
+      agentBanCount: 0,
+      turnTimeoutMs: 30000,
+      sidePickEnabled: true,
+      autoBanEnabled: true,
+    },
+    custom: {
+      draftPreset: "custom",
+      agentBanCount: 6,
+      turnTimeoutMs: 30000,
+      sidePickEnabled: true,
+      autoBanEnabled: true,
+    },
+  };
+  function normalizeTurnTimeoutMs(value) {
+    const n = Number(value);
+    const ms = Number.isFinite(n) ? (n > 1000 ? Math.trunc(n) : Math.trunc(n * 1000)) : 30000;
+    return [15000, 30000, 45000, 60000].includes(ms) ? ms : 30000;
+  }
+  function draftSettings(s) {
+    const raw = (s && s.settings) || {};
+    const preset = DRAFT_PRESETS[raw.draftPreset] ? raw.draftPreset : "custom";
+    return {
+      draftPreset: preset,
+      agentBanCount: agentBanCount(s),
+      turnTimeoutMs: normalizeTurnTimeoutMs(raw.turnTimeoutMs),
+      sidePickEnabled: raw.sidePickEnabled !== false,
+      autoBanEnabled: raw.autoBanEnabled !== false,
+    };
+  }
+  function turnTimeoutNote(ms, autoBanEnabled) {
+    if (!autoBanEnabled) return "Auto-ban is off; captains can take their time.";
+    return "Auto-ban triggers after " + Math.round(normalizeTurnTimeoutMs(ms) / 1000) + " seconds.";
   }
   function showError(el, msg) {
     if (!el) return;
@@ -639,7 +689,7 @@
         }
       }
 
-      syncGameSettingsControls();
+      if (!gameSettingsModal || gameSettingsModal.hidden) syncGameSettingsControls();
     }
 
     function renderRosters() {
@@ -901,12 +951,51 @@
     }
 
     // ─── Coin-flip overlay ────────────────────────────────
+    function readGameSettingsControls() {
+      const preset = document.querySelector("input[name='draftPreset']:checked");
+      const agentBanSelect = $("agentBanCount");
+      const turnTimeoutSelect = $("turnTimeoutMs");
+      const sidePickToggle = $("sidePickEnabled");
+      const autoBanToggle = $("autoBanEnabled");
+      return {
+        draftPreset: preset ? preset.value : "custom",
+        agentBanCount: agentBanSelect ? Number(agentBanSelect.value) : 6,
+        turnTimeoutMs: turnTimeoutSelect ? Number(turnTimeoutSelect.value) : 30000,
+        sidePickEnabled: sidePickToggle ? sidePickToggle.checked : true,
+        autoBanEnabled: autoBanToggle ? autoBanToggle.checked : true,
+      };
+    }
+
+    function setGameSettingsControls(settings) {
+      const next = settings || DRAFT_PRESETS.competitive;
+      const preset = document.querySelector("input[name='draftPreset'][value='" + next.draftPreset + "']");
+      const agentBanSelect = $("agentBanCount");
+      const turnTimeoutSelect = $("turnTimeoutMs");
+      const sidePickToggle = $("sidePickEnabled");
+      const autoBanToggle = $("autoBanEnabled");
+      if (preset) preset.checked = true;
+      if (agentBanSelect && document.activeElement !== agentBanSelect) agentBanSelect.value = String(next.agentBanCount);
+      if (turnTimeoutSelect && document.activeElement !== turnTimeoutSelect) turnTimeoutSelect.value = String(normalizeTurnTimeoutMs(next.turnTimeoutMs));
+      if (sidePickToggle) sidePickToggle.checked = next.sidePickEnabled !== false;
+      if (autoBanToggle) autoBanToggle.checked = next.autoBanEnabled !== false;
+      updateGameSettingsNotes(next);
+    }
+
+    function updateGameSettingsNotes(settings) {
+      const next = settings || readGameSettingsControls();
+      const agentNote = $("agentBanCountNote");
+      const timerNote = $("turnTimeoutNote");
+      if (agentNote) agentNote.textContent = agentBanCountNote(Number(next.agentBanCount), next.sidePickEnabled);
+      if (timerNote) timerNote.textContent = turnTimeoutNote(next.turnTimeoutMs, next.autoBanEnabled);
+    }
+
+    function markCustomPreset() {
+      const custom = document.querySelector("input[name='draftPreset'][value='custom']");
+      if (custom) custom.checked = true;
+    }
+
     function syncGameSettingsControls() {
-      const select = $("agentBanCount");
-      const note = $("agentBanCountNote");
-      const total = agentBanCount(state);
-      if (select && document.activeElement !== select) select.value = String(total);
-      if (note) note.textContent = agentBanCountNote(total);
+      setGameSettingsControls(draftSettings(state));
     }
 
     function openGameSettingsModal() {
@@ -922,8 +1011,8 @@
         card.style.animation = "";
       }
       setTimeout(function () {
-        const select = $("agentBanCount");
-        if (select) try { select.focus({ preventScroll: true }); } catch (_) {}
+        const checkedPreset = gameSettingsModal.querySelector("input[name='draftPreset']:checked");
+        if (checkedPreset) try { checkedPreset.focus({ preventScroll: true }); } catch (_) {}
       }, 50);
     }
 
@@ -1411,19 +1500,34 @@
       const overlay = gameSettingsModal.querySelector("[data-settings-modal-dismiss]");
       if (overlay) overlay.addEventListener("click", closeGameSettingsModal);
     }
-    const agentBanSelect = $("agentBanCount");
-    const agentBanNote = $("agentBanCountNote");
-    if (agentBanSelect && agentBanNote) {
-      agentBanSelect.addEventListener("change", function () {
-        agentBanNote.textContent = agentBanCountNote(Number(agentBanSelect.value));
+    const presetRadios = document.querySelectorAll("input[name='draftPreset']");
+    presetRadios.forEach(function (radio) {
+      radio.addEventListener("change", function () {
+        if (!radio.checked) return;
+        if (radio.value === "custom") {
+          updateGameSettingsNotes();
+          return;
+        }
+        setGameSettingsControls(DRAFT_PRESETS[radio.value] || DRAFT_PRESETS.custom);
       });
-    }
+    });
+    const agentBanSelect = $("agentBanCount");
+    const turnTimeoutSelect = $("turnTimeoutMs");
+    const sidePickToggle = $("sidePickEnabled");
+    const autoBanToggle = $("autoBanEnabled");
+    [agentBanSelect, turnTimeoutSelect, sidePickToggle, autoBanToggle].forEach(function (control) {
+      if (!control) return;
+      control.addEventListener("change", function () {
+        markCustomPreset();
+        updateGameSettingsNotes();
+      });
+    });
     const btnSaveGameSettings = $("btnSaveGameSettings");
     if (btnSaveGameSettings) {
       btnSaveGameSettings.addEventListener("click", function () {
         if (!myCode) return;
-        const agentBanCountValue = agentBanSelect ? Number(agentBanSelect.value) : 6;
-        socket.emit("setGameSettings", { code: myCode, agentBanCount: agentBanCountValue }, function (res) {
+        const settingsPayload = readGameSettingsControls();
+        socket.emit("setGameSettings", { code: myCode, ...settingsPayload }, function (res) {
           if (res && res.ok) {
             btnSaveGameSettings.textContent = "Saved";
             setTimeout(() => { btnSaveGameSettings.textContent = "Save settings"; }, 1500);
