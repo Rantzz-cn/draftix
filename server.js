@@ -28,6 +28,9 @@ const SOCKET_LIMITS = {
   setTeamNames:  [30, 60_000],
   setGameSettings: [30, 60_000],
   startDraft:    [10, 60_000],
+  undoDraftAction: [30, 60_000],
+  rematchDraft:  [10, 60_000],
+  resetDraftToLobby: [10, 60_000],
   banMap:        [60, 60_000],
   banAgent:      [60, 60_000],
   pickSide:      [20, 60_000],
@@ -224,6 +227,61 @@ function clearTurnTimer(session) {
   session.turnEndsAt = null;
 }
 
+function draftSnapshot(session, label) {
+  return {
+    label: label || "Draft action",
+    phase: session.phase,
+    mapBans: session.mapBans.slice(),
+    agentBans: session.agentBans.slice(),
+    currentTurn: session.currentTurn,
+    firstBanner: session.firstBanner || null,
+    selectedMap: session.selectedMap || null,
+    selectedSide: session.selectedSide || null,
+    sidePickerTeam: session.sidePickerTeam || null,
+  };
+}
+
+function pushUndoSnapshot(session, label) {
+  if (!session || session.phase === "lobby") return;
+  if (!Array.isArray(session.undoStack)) session.undoStack = [];
+  session.undoStack.push(draftSnapshot(session, label));
+  if (session.undoStack.length > 50) {
+    session.undoStack.splice(0, session.undoStack.length - 50);
+  }
+}
+
+function restoreDraftSnapshot(session, snap) {
+  session.phase = snap.phase;
+  session.mapBans = Array.isArray(snap.mapBans) ? snap.mapBans.slice() : [];
+  session.agentBans = Array.isArray(snap.agentBans) ? snap.agentBans.slice() : [];
+  session.currentTurn = snap.currentTurn || "A";
+  session.firstBanner = snap.firstBanner || null;
+  session.selectedMap = snap.selectedMap || null;
+  session.selectedSide = snap.selectedSide || null;
+  session.sidePickerTeam = snap.sidePickerTeam || null;
+}
+
+function resetDraftState(session) {
+  session.mapBans = [];
+  session.agentBans = [];
+  session.selectedMap = null;
+  session.selectedSide = null;
+  session.sidePickerTeam = null;
+  session.firstBanner = null;
+  session.currentTurn = "A";
+  session.undoStack = [];
+  clearTurnTimer(session);
+}
+
+function beginDraft(session, io) {
+  resetDraftState(session);
+  session.phase = "map_ban";
+  const firstBanner = Math.random() < 0.5 ? "A" : "B";
+  session.currentTurn = firstBanner;
+  session.firstBanner = firstBanner;
+  armTurnTimer(session, io);
+}
+
 function armTurnTimer(session, io) {
   clearTurnTimer(session);
   if (session.phase !== "map_ban" && session.phase !== "agent_ban") return;
@@ -233,6 +291,7 @@ function armTurnTimer(session, io) {
   session._turnTimer = setTimeout(() => {
     // Validate phase is still timing — a captain may have banned just before us.
     if (session.phase !== "map_ban" && session.phase !== "agent_ban") return;
+    pushUndoSnapshot(session, "Auto-ban");
     performAutoBan(session);
     armTurnTimer(session, io);
     broadcastSession(io, session);
@@ -384,6 +443,20 @@ function sessionView(session, forSocketId) {
     serverNow: Date.now(),
     turnTimeoutMs: turnTimeoutFor(session),
     chat: Array.isArray(session.chat) ? session.chat.slice(-CHAT_HISTORY) : [],
+    ops: {
+      canUndo:
+        session.hostId === forSocketId &&
+        Array.isArray(session.undoStack) &&
+        session.undoStack.length > 0 &&
+        session.phase !== "lobby",
+      canRematch: session.hostId === forSocketId && session.phase === "done" && !!session.captainA && !!session.captainB,
+      canResetToLobby: session.hostId === forSocketId && session.phase !== "lobby",
+      undoCount: Array.isArray(session.undoStack) ? session.undoStack.length : 0,
+      lastUndoLabel:
+        Array.isArray(session.undoStack) && session.undoStack.length
+          ? session.undoStack[session.undoStack.length - 1].label
+          : null,
+    },
     catalog,
   };
 }
@@ -425,6 +498,7 @@ function createSession(hostId, roomCode) {
     sidePickerTeam: null,     // which team picks side (set when entering side_pick)
     turnEndsAt: null,
     _turnTimer: null,
+    undoStack: [],
     // ─── Resume-on-refresh ──────────────────────────────
     // Each connected player gets a stable 16-byte token. We keep their seat
     // (captain/host/team/nickname) tied to the token, not to the volatile
@@ -1114,22 +1188,63 @@ async function main() {
         if (typeof cb === "function") cb({ ok: false, error: "Need both captains" });
         return;
       }
-      const left = remainingMaps(session);
-      if (left.length < 2) {
+      if (catalog.maps.length < 2) {
         if (typeof cb === "function") cb({ ok: false, error: "Not enough maps in catalog" });
         return;
       }
-      session.phase = "map_ban";
-      session.mapBans = [];
-      session.agentBans = [];
-      session.selectedMap = null;
-      session.selectedSide = null;
-      session.sidePickerTeam = null;
-      // Coin flip: random team bans first.
-      const firstBanner = Math.random() < 0.5 ? "A" : "B";
-      session.currentTurn = firstBanner;
-      session.firstBanner = firstBanner;
+      beginDraft(session, io);
+      broadcastSession(io, session);
+      if (typeof cb === "function") cb({ ok: true });
+    }));
+
+    socket.on("undoDraftAction", (payload, cb) => withLimit(socket, "undoDraftAction", cb, () => {
+      const code = payload && String(payload.code).toUpperCase();
+      const session = sessions.get(code);
+      if (!session || session.hostId !== socket.id) {
+        if (typeof cb === "function") cb({ ok: false, error: "Only host can undo" });
+        return;
+      }
+      if (session.phase === "lobby" || !Array.isArray(session.undoStack) || !session.undoStack.length) {
+        if (typeof cb === "function") cb({ ok: false, error: "Nothing to undo" });
+        return;
+      }
+      const snap = session.undoStack.pop();
+      clearTurnTimer(session);
+      restoreDraftSnapshot(session, snap);
       armTurnTimer(session, io);
+      broadcastSession(io, session);
+      if (typeof cb === "function") cb({ ok: true, undone: snap.label || "Draft action" });
+    }));
+
+    socket.on("rematchDraft", (payload, cb) => withLimit(socket, "rematchDraft", cb, () => {
+      const code = payload && String(payload.code).toUpperCase();
+      const session = sessions.get(code);
+      if (!session || session.hostId !== socket.id) {
+        if (typeof cb === "function") cb({ ok: false, error: "Only host can start a rematch" });
+        return;
+      }
+      if (!session.captainA || !session.captainB) {
+        if (typeof cb === "function") cb({ ok: false, error: "Need both captains" });
+        return;
+      }
+      if (catalog.maps.length < 2) {
+        if (typeof cb === "function") cb({ ok: false, error: "Not enough maps in catalog" });
+        return;
+      }
+      beginDraft(session, io);
+      broadcastSession(io, session);
+      if (typeof cb === "function") cb({ ok: true });
+    }));
+
+    socket.on("resetDraftToLobby", (payload, cb) => withLimit(socket, "resetDraftToLobby", cb, () => {
+      const code = payload && String(payload.code).toUpperCase();
+      const session = sessions.get(code);
+      if (!session || session.hostId !== socket.id) {
+        if (typeof cb === "function") cb({ ok: false, error: "Only host can return to lobby" });
+        return;
+      }
+      resetDraftState(session);
+      session.phase = "lobby";
       broadcastSession(io, session);
       if (typeof cb === "function") cb({ ok: true });
     }));
@@ -1157,6 +1272,7 @@ async function main() {
         if (typeof cb === "function") cb({ ok: false, error: "Map already decided" });
         return;
       }
+      pushUndoSnapshot(session, "Map ban");
       session.mapBans.push(mapUuid);
       const left = remainingMaps(session);
       if (left.length === 1) {
@@ -1189,6 +1305,7 @@ async function main() {
         if (typeof cb === "function") cb({ ok: false, error: "Not your pick" });
         return;
       }
+      pushUndoSnapshot(session, "Side pick");
       session.selectedSide = side;
       if (agentBanCountFor(session) <= 0) {
         session.phase = "done";
@@ -1311,6 +1428,7 @@ async function main() {
         if (typeof cb === "function") cb({ ok: false, error: "Ban phase over" });
         return;
       }
+      pushUndoSnapshot(session, "Agent ban");
       session.agentBans.push(agentUuid);
       if (session.agentBans.length >= agentBanCountFor(session)) {
         session.phase = "done";

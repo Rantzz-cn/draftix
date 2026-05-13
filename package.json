@@ -11,7 +11,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node test/test-resume.js"
+    "test": "node test/test-resume.js && node test/test-draft-ops.js"
   },
   "keywords": [
     "valorant",

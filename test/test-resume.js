@@ -3,7 +3,7 @@
 // emits state on every broadcast, the "current" state is what matters).
 
 const { io } = require("socket.io-client");
-const URL = "http://localhost:3000";
+const URL = process.env.TEST_SERVER_URL || "http://localhost:3000";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function makeSock(label) {

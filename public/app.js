@@ -730,10 +730,31 @@
       // Total ban-rounds (including the decider slot at the end).
       // We alternate A,B,A,B... but the decider slot is "neither".
       const seq = [];
-      let t = "A";
+      let t = state && state.firstBanner === "B" ? "B" : "A";
       for (let i = 0; i < total - 1; i++) { seq.push(t); t = t === "A" ? "B" : "A"; }
       seq.push(null); // decider
       return seq;
+    }
+
+    function renderDraftOps() {
+      const ops = (state && state.ops) || {};
+      const undoBtn = $("btnUndoDraft");
+      if (undoBtn) {
+        undoBtn.hidden = !ops.canUndo;
+        undoBtn.disabled = !ops.canUndo;
+        undoBtn.textContent = ops.lastUndoLabel ? "Undo " + ops.lastUndoLabel.toLowerCase() : "Undo last";
+        undoBtn.title = ops.undoCount ? "Undo the most recent draft action" : "Nothing to undo";
+      }
+      const rematchBtn = $("modalRematchBtn");
+      if (rematchBtn) {
+        rematchBtn.hidden = !ops.canRematch;
+        rematchBtn.disabled = !ops.canRematch;
+      }
+      const lobbyBtn = $("modalLobbyBtn");
+      if (lobbyBtn) {
+        lobbyBtn.hidden = !ops.canResetToLobby;
+        lobbyBtn.disabled = !ops.canResetToLobby;
+      }
     }
 
     function renderRoundChips() {
@@ -1072,6 +1093,7 @@
       renderRosters();
       renderRoundChips();
       renderHistory();
+      renderDraftOps();
 
       const maps = (state.catalog && state.catalog.maps) || [];
       const agents = (state.catalog && state.catalog.agents) || [];
@@ -1163,6 +1185,18 @@
       } else {
         showError(roomError, "");
       }
+    }
+
+    function emitDraftOp(eventName, successMsg) {
+      if (!myCode) return;
+      socket.emit(eventName, { code: myCode }, function (res) {
+        if (res && res.ok) {
+          showError(roomError, "");
+          if (successMsg) toast.success(successMsg);
+        } else if (res && res.error) {
+          toast.error(res.error);
+        }
+      });
     }
 
     // ─── Socket events ────────────────────────────────────
@@ -1469,6 +1503,13 @@
       socket.emit("startDraft", { code: myCode }, ackRoom);
     });
 
+    const btnUndoDraft = $("btnUndoDraft");
+    if (btnUndoDraft) {
+      btnUndoDraft.addEventListener("click", function () {
+        emitDraftOp("undoDraftAction", "Last draft action undone");
+      });
+    }
+
     // Team names
     const btnSaveTeamNames = $("btnSaveTeamNames");
     if (btnSaveTeamNames) {
@@ -1593,6 +1634,22 @@
 
       $("modalClose").addEventListener("click", function () { closeCompleteModal(); });
       $("modalDoneBtn").addEventListener("click", function () { closeCompleteModal(); });
+      const rematchBtn = $("modalRematchBtn");
+      if (rematchBtn) {
+        rematchBtn.addEventListener("click", function () {
+          modalShownForCode = null;
+          closeCompleteModal({ silent: true });
+          emitDraftOp("rematchDraft", "Rematch started");
+        });
+      }
+      const lobbyBtn = $("modalLobbyBtn");
+      if (lobbyBtn) {
+        lobbyBtn.addEventListener("click", function () {
+          modalShownForCode = null;
+          closeCompleteModal({ silent: true });
+          emitDraftOp("resetDraftToLobby", "Returned to lobby");
+        });
+      }
 
       const overlay = completeModal.querySelector("[data-modal-dismiss]");
       if (overlay) overlay.addEventListener("click", function () { closeCompleteModal(); });
